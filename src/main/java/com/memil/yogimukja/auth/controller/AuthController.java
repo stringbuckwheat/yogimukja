@@ -30,7 +30,6 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         // 로그인 서비스 호출
         AuthTokens authTokens = authService.login(loginRequest);
-        log.info("authTokens: {}", authTokens);
 
         // 쿠키에 Refresh token 담기
         HttpHeaders headers = cookieUtil.getHeaderWithRefreshToken(authTokens.getRefreshToken(), 4 * 60 * 60);

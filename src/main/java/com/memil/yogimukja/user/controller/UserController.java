@@ -40,7 +40,7 @@ public class UserController {
      * @param userRequest
      * @return
      */
-    @PostMapping("/api/user/register")
+    @PostMapping("/api/user/join")
     public ResponseEntity<Void> register(@RequestBody UserRequest userRequest) {
         userService.register(userRequest);
         return ResponseEntity.noContent().build();

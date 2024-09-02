@@ -35,9 +35,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/api/login", "/api/register", "/api/token/reissue", "/api/logout").permitAll()
+                                .requestMatchers("/api/user/join", "/api/login", "/api/token/reissue", "/api/logout").permitAll()
 
-                                .requestMatchers("/api/auth/**").authenticated()
+                                .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

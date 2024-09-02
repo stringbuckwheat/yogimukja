@@ -48,7 +48,10 @@ public class UserServiceImpl implements UserService {
         registerRequest.encryptPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         // 저장
-        userRepository.save(registerRequest.toEntity());
+        User user = userRepository.save(registerRequest.toEntity());
+
+        // 로그인 처리
+        authService.authenticateAndGenerateTokens(user.getId(), user.getUsername());
     }
 
     @Transactional
@@ -91,8 +94,6 @@ public class UserServiceImpl implements UserService {
 
     // 탈퇴
     public void delete(Long userId, String refreshToken) {
-        // TODO 쿠키 삭제
-
         // Redis 삭제
         authService.removeAuthentication(refreshToken);
 

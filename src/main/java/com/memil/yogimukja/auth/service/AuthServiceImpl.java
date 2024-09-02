@@ -37,14 +37,19 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException(ErrorMessage.WRONG_PASSWORD.getMessage());
         }
 
+        return authenticateAndGenerateTokens(user.getId(), user.getUsername());
+    }
+
+    @Override
+    public AuthTokens authenticateAndGenerateTokens(Long userId, String username) {
         // Security Context 저장
-        tokenProvider.setAuthentication(user.getId(), user.getUsername());
+        tokenProvider.setAuthentication(userId, username);
 
         // Access Token, Refresh Token 생성
-        AccessToken accessToken = tokenProvider.generateAccessToken(user.getId(), user.getUsername());
-        RefreshToken refreshToken = tokenProvider.generateRefreshToken(user.getId(), user.getUsername());
+        AccessToken accessToken = tokenProvider.generateAccessToken(userId, username);
+        RefreshToken refreshToken = tokenProvider.generateRefreshToken(userId, username);
 
-        return new AuthTokens(refreshToken.getToken(), accessToken.getToken(), user.getUsername());
+        return new AuthTokens(refreshToken.getToken(), accessToken.getToken(), username);
     }
 
     @Override
