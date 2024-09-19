@@ -1,4 +1,4 @@
-package com.memil.yogimukja.datapipeline.dto;
+package com.memil.yogimukja.batch.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.ToString;
