@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "restaurant")
 @Getter
@@ -26,6 +29,8 @@ public class Restaurant {
     private String restaurantType; // 업태 구분명
     private String homepage; // 홈페이지
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant")
+    List<Review> reviews = new ArrayList<>();
 
     @Builder
     public Restaurant(String name, String address, Double latitude, Double longitude, String managementNo, String closedDate, String phoneNumber, String restaurantType, String homepage) {
