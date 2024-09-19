@@ -31,10 +31,12 @@ public class RestaurantWriter implements ItemWriter<List<Restaurant>> {
                 .collect(Collectors.toMap(
                         r -> generateUniqueKey(r.getName(), r.getAddress()),
                         r -> r,
-                        (existing, replacement) -> replacement
+                        (existing, replacement) -> {
+                            // 키 중복 시 업데이트 된 날짜가 최근인 엔티티 선택
+                            return existing.getApiUpdatedAt().isAfter(replacement.getApiUpdatedAt()) ? existing : replacement;
+                        }
                 ));
     }
-
 
     private String generateUniqueKey(String name, String address) {
         return name + "::" + address;
@@ -42,12 +44,10 @@ public class RestaurantWriter implements ItemWriter<List<Restaurant>> {
 
     @Override
     public void write(Chunk<? extends List<Restaurant>> chunk) throws Exception {
-        log.info(">>>>>>>>> Restaurant Writer");
-
         // chunk -> list
         List<Restaurant> restaurants = chunk.getItems().stream()
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
 
         // 새로운 레스토랑과 업데이트가 필요한 레스토랑 분리
         List<Restaurant> toSave = new ArrayList<>();
@@ -68,10 +68,20 @@ public class RestaurantWriter implements ItemWriter<List<Restaurant>> {
         // 배치 저장
         if (!toSave.isEmpty()) {
             restaurantRepository.saveAll(toSave);
+            // 새로 저장된 레스토랑을 map에 추가
+            for (Restaurant restaurant : toSave) {
+                String key = generateUniqueKey(restaurant.getName(), restaurant.getAddress());
+                existingRestaurantMap.put(key, restaurant);
+            }
         }
 
         if (!toUpdate.isEmpty()) {
             restaurantRepository.saveAll(toUpdate);
+            // 업데이트된 레스토랑을 map에 반영
+            for (Restaurant restaurant : toUpdate) {
+                String key = generateUniqueKey(restaurant.getName(), restaurant.getAddress());
+                existingRestaurantMap.put(key, restaurant);
+            }
         }
     }
 }

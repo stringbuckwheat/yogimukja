@@ -3,61 +3,77 @@ package com.memil.yogimukja.batch;
 import com.memil.yogimukja.batch.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemReader;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StopWatch;
-import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 @Component
 public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
-    private final WebClient webClient;
-    private final AtomicInteger currentIndex = new AtomicInteger(1);
-    private final AtomicInteger end = new AtomicInteger(1000);
+
+    private final RestaurantDataFetcher dataFetcher;
+    private final ConcurrentLinkedQueue<Range> rangeQueue = new ConcurrentLinkedQueue<>();
+    private int end;
     private final int step = 1000;
 
-    public RestaurantReader(WebClient.Builder webClientBuilder,
-                            @Value("${api.seoul.key}") String apiKey) {
-        this.webClient = webClientBuilder
-                .baseUrl("http://openapi.seoul.go.kr:8088/" + apiKey + "/json/LOCALDATA_072404")
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(30 * 1024 * 1024)) // 30MB
-                .build();
+    public RestaurantReader(RestaurantDataFetcher dataFetcher) {
+        this.dataFetcher = dataFetcher;
+        initializeEndValue()
+                .doOnSuccess(aVoid -> initializeRanges())
+                .block(); // 이 메서드가 완료되기 전까지는 read() 메서드가 호출되지 않도록 보장
+    }
+
+    private Mono<Void> initializeEndValue() {
+        return dataFetcher.fetchInitialData()
+                .map(response -> response.getLocaldata().getListTotalCount())
+                .doOnNext(value -> {
+                    this.end = value;
+                    log.info("Dynamic end value set to: {}", end);
+                })
+                .then();
+    }
+
+    private void initializeRanges() {
+        for (int start = 1; start <= end; start += step) {
+            int rangeEnd = Math.min(start + step - 1, end);
+            rangeQueue.add(new Range(start, rangeEnd));
+        }
     }
 
     @Override
     public List<ApiResponse.Row> read() {
-        log.info(">>>>>>>>> Restaurant Reader ");
-
-        int current = currentIndex.get();
-        if (current > end.get()) {
+        Range range = rangeQueue.poll();
+        if (range == null) {
             return null; // 모든 페이지를 읽었다면 null을 반환
         }
 
-        int rangeEnd = Math.min(current + step - 1, end.get());
-        String apiUrl = "/" + current + "/" + rangeEnd;
+        System.out.println(range.getStart() + "/" + range.getEnd());
 
-        currentIndex.addAndGet(step); // 다음 범위로 이동
+        return dataFetcher.fetchData(range.getStart(), range.getEnd())
+                .subscribeOn(Schedulers.boundedElastic()) // 비동기 처리
+                .collectList()
+                .doOnError(e -> log.error("Error fetching data for range: {}-{}", range.getStart(), range.getEnd(), e))
+                .block(); // 결과를 동기적으로 받기
+    }
 
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+    private static class Range {
+        private final int start;
+        private final int end;
 
-        ApiResponse.LocalData localdata = Objects.requireNonNull(webClient.get()
-                        .uri(apiUrl)
-                        .retrieve()
-                        .bodyToMono(ApiResponse.class)
-                        .doFinally(signalType -> stopWatch.stop())
-                        .doOnSuccess(response -> log.info("Fetched API response for range: {}-{}", current, rangeEnd))
-                        .doOnError(error -> log.error("Error fetching API response for range: {}-{}", current, rangeEnd, error))
-                        .block()) // Mono를 블로킹하여 ApiResponse 반환
-                .getLocaldata();
+        public Range(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
 
-        // 마지막 페이지 계산
-        end.set(localdata.getListTotalCount());
+        public int getStart() {
+            return start;
+        }
 
-        return localdata.getRow();
+        public int getEnd() {
+            return end;
+        }
     }
 }

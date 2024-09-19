@@ -8,6 +8,8 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Slf4j
@@ -16,27 +18,27 @@ public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>,
 
     @Override
     public List<Restaurant> process(List<ApiResponse.Row> rows) throws Exception {
-        log.info(">>>>>>>>> Restaurant Processor ");
-
         // 데이터 처리 로직
-        return rows.parallelStream().map(this::mapToRestaurant).toList();
+        return rows.parallelStream()
+                .map(this::mapToRestaurant)
+                .toList();
     }
 
     private Restaurant mapToRestaurant(ApiResponse.Row item) {
         ProjCoordinate location = convertToWGS84(item.getX(), item.getY());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
 
         return Restaurant.builder()
                 .name(item.getBplcNm())
                 .address(item.getRdnWhlAddr())
                 .latitude(location == null ? null : location.y)
                 .longitude(location == null ? null : location.x)
-
+                .regionCode(item.getOpnsfTeamCode())
                 .managementNo(item.getMgtNo())
                 .closedDate(item.getDcbYmd())
                 .phoneNumber(item.getSiteTel())
                 .restaurantType(item.getUptAenM())
-                .homepage(item.getHomePage())
-
+                .apiUpdatedAt(LocalDateTime.parse(item.getUpdateDt(), formatter))
                 .build();
     }
 

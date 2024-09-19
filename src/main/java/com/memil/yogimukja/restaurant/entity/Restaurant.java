@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,27 +23,28 @@ public class Restaurant {
     private String address;
     private Double latitude; // 위도
     private Double longitude; // 경도
-
+    private String regionCode; // 개방 자치 단체 코드
     private String managementNo; // 관리 번호
     private String closedDate; // 폐업일
     private String phoneNumber; // 전화번호
     private String restaurantType; // 업태 구분명
-    private String homepage; // 홈페이지
+    private LocalDateTime apiUpdatedAt; // API 수정일
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant")
-    List<Review> reviews = new ArrayList<>();
+    private List<Review> reviews = new ArrayList<>();
 
     @Builder
-    public Restaurant(String name, String address, Double latitude, Double longitude, String managementNo, String closedDate, String phoneNumber, String restaurantType, String homepage) {
+    public Restaurant(String name, String address, Double latitude, Double longitude, String regionCode, String managementNo, String closedDate, String phoneNumber, String restaurantType, LocalDateTime apiUpdatedAt) {
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.regionCode = regionCode;
         this.managementNo = managementNo;
         this.closedDate = closedDate;
         this.phoneNumber = phoneNumber;
         this.restaurantType = restaurantType;
-        this.homepage = homepage;
+        this.apiUpdatedAt = apiUpdatedAt;
     }
 
     public void setNoLocation() {
@@ -60,6 +62,5 @@ public class Restaurant {
         this.closedDate = restaurant.getClosedDate();
         this.phoneNumber = restaurant.getPhoneNumber();
         this.restaurantType = restaurant.getRestaurantType();
-        this.homepage = restaurant.getHomepage();
     }
 }

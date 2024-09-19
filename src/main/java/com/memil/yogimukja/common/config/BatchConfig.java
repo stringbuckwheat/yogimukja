@@ -1,6 +1,8 @@
 package com.memil.yogimukja.common.config;
 
-import com.memil.yogimukja.batch.*;
+import com.memil.yogimukja.batch.RestaurantProcessor;
+import com.memil.yogimukja.batch.RestaurantReader;
+import com.memil.yogimukja.batch.RestaurantWriter;
 import com.memil.yogimukja.batch.dto.ApiResponse;
 import com.memil.yogimukja.restaurant.entity.Restaurant;
 import lombok.RequiredArgsConstructor;
@@ -47,13 +49,11 @@ public class BatchConfig {
     @Bean
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(25);
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(20);
         executor.setThreadNamePrefix("Async-");
         executor.initialize();
         return executor;
     }
 }
-
-
