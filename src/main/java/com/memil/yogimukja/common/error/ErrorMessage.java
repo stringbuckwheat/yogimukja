@@ -16,8 +16,15 @@ public enum ErrorMessage {
     REFRESH_TOKEN_NOT_FOUND("Redis에 리프레쉬 토큰이 존재하지 않습니다."),
     NO_REFRESH_TOKEN("리프레쉬 토큰이 존재하지 않습니다."),
     PLEASE_LOGIN("로그인이 필요한 엔드포인트입니다."),
-    USER_NOT_FOUND("해당 유저를 찾을 수 없습니다.")
+
+    ///// NOT_ FOUND
+    USER_NOT_FOUND("해당 유저를 찾을 수 없습니다."),
+    RESTAURANT_NOT_FOUND("해당 음식점을 찾을 수 없습니다."),
+    REVIEW_NOT_FOUND("해당 리뷰를 찾을 수 없습니다."),
+
+    ///// ACCESS_DENIED
+    NOT_YOUR_REVIEW("해당 리뷰를 수정/삭제할 권한이 없어요")
     ;
 
-    String message;
+    private String message;
 }

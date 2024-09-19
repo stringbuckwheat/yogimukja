@@ -1,5 +1,6 @@
 package com.memil.yogimukja.common.error;
 
+import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
 import com.memil.yogimukja.common.error.exception.RefreshTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,11 @@ import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(HasSameUsernameException.class)
+    public ResponseEntity<ErrorResponse> handleHasSameUsernameException(HasSameUsernameException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(RefreshTokenException.class)
     public ResponseEntity<ErrorResponse> handleExpiredRefreshTokenException(RefreshTokenException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(e.getMessage()));
