@@ -1,24 +1,41 @@
 package com.memil.yogimukja.restaurant.service;
 
+import com.memil.yogimukja.common.error.ErrorMessage;
+import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
+import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
+import com.memil.yogimukja.restaurant.dto.RestaurantSummary;
+import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
 import com.memil.yogimukja.restaurant.repository.RestaurantRepository;
+import com.memil.yogimukja.restaurant.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class RestaurantServiceImpl {
     private final RestaurantRepository restaurantRepository;
+    private final RestaurantQueryRepository restaurantQueryRepository;
+    private final ReviewRepository reviewRepository;
 
-    // 맛집 (추가 필드 관리)
-    // 평점: Double (초기값 0.0, 모든 평가의 평균)
+    public RestaurantResponse getDetail(Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new NoSuchElementException(ErrorMessage.RESTAURANT_NOT_FOUND.getMessage()));
 
-    // 맛집 목록
-    // GIS
-    // 파라미터 (lat: y축, lon: x축, range: double, 정렬 기능: 거리 순, 평점 순, 이름 순 등)
+        // 평점
+        Double average = reviewRepository.getAverageBy(restaurantId);
 
-    // 맛집 상세 정보
-    // 맛집의 모든 피드 + 평점 + 리뷰
+        // TODO 리뷰들, 내가 쓴 리뷰 등
 
+        return new RestaurantResponse(restaurant, average);
+    }
+
+    public List<RestaurantSummary> getAllBy(RestaurantQueryParams queryParams) {
+        return restaurantQueryRepository.findRestaurantsWithinDistance(queryParams);
+    }
 }
