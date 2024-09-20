@@ -1,12 +1,15 @@
 package com.memil.yogimukja.batch;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
-import com.memil.yogimukja.restaurant.repository.RestaurantRepository;
+import com.memil.yogimukja.batch.dto.RestaurantOverview;
+import com.memil.yogimukja.batch.dto.RestaurantPayload;
+import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -15,73 +18,104 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RestaurantWriter implements ItemWriter<List<Restaurant>> {
+@Lazy
+public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
 
-    private final RestaurantRepository restaurantRepository;
-
-    private Map<String, Restaurant> existingRestaurantMap;
+    private final RestaurantQueryRepository restaurantQueryRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private Map<String, RestaurantOverview> existingRestaurantMap;
 
     @PostConstruct
     public void init() {
         log.info(">>>>>>>>> Initializing Restaurant Writer");
 
-        // 초기 로드: 데이터베이스에서 모든 레스토랑을 조회하여 캐시
-        List<Restaurant> existingRestaurants = restaurantRepository.findAll();
-        existingRestaurantMap = existingRestaurants.stream()
-                .collect(Collectors.toMap(
-                        r -> generateUniqueKey(r.getName(), r.getAddress()),
-                        r -> r,
-                        (existing, replacement) -> {
-                            // 키 중복 시 업데이트 된 날짜가 최근인 엔티티 선택
-                            return existing.getApiUpdatedAt().isAfter(replacement.getApiUpdatedAt()) ? existing : replacement;
-                        }
-                ));
-    }
-
-    private String generateUniqueKey(String name, String address) {
-        return name + "::" + address;
+        existingRestaurantMap = restaurantQueryRepository.findAllManagementIdAndApiUpdatedAt().stream()
+                .collect(Collectors.toMap(RestaurantOverview::getManagementId, r -> r));
     }
 
     @Override
-    public void write(Chunk<? extends List<Restaurant>> chunk) throws Exception {
-        // chunk -> list
-        List<Restaurant> restaurants = chunk.getItems().stream()
+    public void write(Chunk<? extends List<RestaurantPayload>> chunk) {
+        List<RestaurantPayload> restaurants = chunk.getItems().stream()
                 .flatMap(List::stream)
                 .toList();
 
-        // 새로운 레스토랑과 업데이트가 필요한 레스토랑 분리
-        List<Restaurant> toSave = new ArrayList<>();
-        List<Restaurant> toUpdate = new ArrayList<>();
+        // 신규 추가 및 업데이트할 레스토랑 리스트
+        List<RestaurantPayload> toInsert = new ArrayList<>();
+        List<RestaurantPayload> toUpdate = new ArrayList<>();
 
-        for (Restaurant restaurant : restaurants) {
-            String key = generateUniqueKey(restaurant.getName(), restaurant.getAddress());
+        for (RestaurantPayload restaurant : restaurants) {
+            String managementId = restaurant.getManagementId();
 
-            if (existingRestaurantMap.containsKey(key)) {
-                Restaurant existingRestaurant = existingRestaurantMap.get(key);
-                existingRestaurant.update(restaurant);
-                toUpdate.add(existingRestaurant);
+            if (existingRestaurantMap.containsKey(managementId)) {
+                // 기존 엔티티가 있을 때, 업데이트 필요 확인
+                RestaurantOverview existing = existingRestaurantMap.get(managementId);
+
+                // 새 엔티티가 더 최신 정보를 반영하고 있을 때
+                if (existing.getApiUpdatedAt().isBefore(restaurant.getApiUpdatedAt())) {
+                    toUpdate.add(restaurant); // 업데이트 목록에 추가
+                }
+
             } else {
-                toSave.add(restaurant);
+                // 신규 엔티티인 경우
+                existingRestaurantMap.put(managementId, new RestaurantOverview(restaurant));
+                toInsert.add(restaurant); // 신규 추가
             }
         }
 
-        // 배치 저장
-        if (!toSave.isEmpty()) {
-            restaurantRepository.saveAll(toSave);
-            // 새로 저장된 레스토랑을 map에 추가
-            for (Restaurant restaurant : toSave) {
-                String key = generateUniqueKey(restaurant.getName(), restaurant.getAddress());
-                existingRestaurantMap.put(key, restaurant);
-            }
-        }
+        // Bulk Insert
+        bulkInsert(toInsert);
 
-        if (!toUpdate.isEmpty()) {
-            restaurantRepository.saveAll(toUpdate);
-            // 업데이트된 레스토랑을 map에 반영
-            for (Restaurant restaurant : toUpdate) {
-                String key = generateUniqueKey(restaurant.getName(), restaurant.getAddress());
-                existingRestaurantMap.put(key, restaurant);
-            }
-        }
+        // Bulk Update
+        bulkUpdate(toUpdate);
+    }
+
+    private void bulkInsert(List<RestaurantPayload> restaurants) {
+        String sql = """
+                INSERT INTO restaurant (
+                    management_id, name, address, location, closed_date, phone_number, restaurant_type, api_updated_at
+                ) VALUES (
+                    ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?
+                )
+                """;
+
+        List<Object[]> batchArgs = restaurants.stream()
+                .map(restaurant -> new Object[]{
+                        restaurant.getManagementId(),
+                        restaurant.getName(),
+                        restaurant.getAddress(),
+                        restaurant.getLocation() != null ? restaurant.getLocation().toText() : null,
+                        restaurant.getClosedDate(),
+                        restaurant.getPhoneNumber(),
+                        restaurant.getRestaurantType(),
+                        restaurant.getApiUpdatedAt()
+                })
+                .collect(Collectors.toList());
+
+        jdbcTemplate.batchUpdate(sql, batchArgs);
+    }
+
+    private void bulkUpdate(List<RestaurantPayload> restaurants) {
+        String sql = """
+                UPDATE 
+                    restaurant 
+                SET name = ?, address = ?, location = ST_GeomFromText(?, 4326), closed_date = ?, 
+                    phone_number = ?, restaurant_type = ?, api_updated_at = ? 
+                WHERE management_id = ?
+                """;
+
+        List<Object[]> batchArgs = restaurants.stream()
+                .map(restaurant -> new Object[]{
+                        restaurant.getName(),
+                        restaurant.getAddress(),
+                        restaurant.getLocation() != null ? restaurant.getLocation().toText() : null,
+                        restaurant.getClosedDate(),
+                        restaurant.getPhoneNumber(),
+                        restaurant.getRestaurantType(),
+                        restaurant.getApiUpdatedAt(),
+                        restaurant.getManagementId()
+                })
+                .collect(Collectors.toList());
+
+        jdbcTemplate.batchUpdate(sql, batchArgs);
     }
 }

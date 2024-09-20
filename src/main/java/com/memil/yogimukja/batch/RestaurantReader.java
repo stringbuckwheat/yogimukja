@@ -9,7 +9,6 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 @Slf4j
 @Component
 public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
@@ -23,7 +22,7 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
         this.dataFetcher = dataFetcher;
         initializeEndValue()
                 .doOnSuccess(aVoid -> initializeRanges())
-                .block(); // 이 메서드가 완료되기 전까지는 read() 메서드가 호출되지 않도록 보장
+                .block();
     }
 
     private Mono<Void> initializeEndValue() {
@@ -46,17 +45,19 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
     @Override
     public List<ApiResponse.Row> read() {
         Range range = rangeQueue.poll();
+
         if (range == null) {
-            return null; // 모든 페이지를 읽었다면 null을 반환
+            log.info("Reading all of the api data");
+            return null;
         }
 
         System.out.println(range.getStart() + "/" + range.getEnd());
 
         return dataFetcher.fetchData(range.getStart(), range.getEnd())
-                .subscribeOn(Schedulers.boundedElastic()) // 비동기 처리
+                .subscribeOn(Schedulers.boundedElastic())
                 .collectList()
                 .doOnError(e -> log.error("Error fetching data for range: {}-{}", range.getStart(), range.getEnd(), e))
-                .block(); // 결과를 동기적으로 받기
+                .block();
     }
 
     private static class Range {

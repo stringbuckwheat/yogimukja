@@ -1,54 +1,68 @@
 package com.memil.yogimukja.batch;
 
 import com.memil.yogimukja.batch.dto.ApiResponse;
+import com.memil.yogimukja.batch.dto.RestaurantPayload;
+import com.memil.yogimukja.restaurant.entity.Region;
 import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.repository.RegionRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.proj4j.*;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>, List<Restaurant>> {
+@RequiredArgsConstructor
+@Lazy
+public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>, List<RestaurantPayload>> {
+    private final GeometryFactory geometryFactory = new GeometryFactory();
+    private final RegionRepository regionRepository;
+    private Map<Long, Region> regionMap;
+
+    @PostConstruct
+    public void init() {
+        log.info(">>>>>>>>> Initializing RestaurantProcessor");
+
+        regionMap = regionRepository.findAll().stream()
+                .collect(Collectors.toMap(Region::getId, r -> r));
+    }
 
     @Override
-    public List<Restaurant> process(List<ApiResponse.Row> rows) throws Exception {
-        // 데이터 처리 로직
+    public List<RestaurantPayload> process(List<ApiResponse.Row> rows) {
         return rows.parallelStream()
+                .filter(this::isValid)
                 .map(this::mapToRestaurant)
                 .toList();
     }
 
-    private Restaurant mapToRestaurant(ApiResponse.Row item) {
-        ProjCoordinate location = convertToWGS84(item.getX(), item.getY());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
+    private boolean isValid(ApiResponse.Row row) {
+        return row != null
+                && row.getRdnWhlAddr() != null && !row.getRdnWhlAddr().isEmpty()
+                && row.getY() != null && !row.getY().isEmpty()
+                && row.getX() != null && !row.getX().isEmpty();
+    }
 
-        return Restaurant.builder()
-                .name(item.getBplcNm())
-                .address(item.getRdnWhlAddr())
-                .latitude(location == null ? null : location.y)
-                .longitude(location == null ? null : location.x)
-                .regionCode(item.getOpnsfTeamCode())
-                .managementNo(item.getMgtNo())
-                .closedDate(item.getDcbYmd())
-                .phoneNumber(item.getSiteTel())
-                .restaurantType(item.getUptAenM())
-                .apiUpdatedAt(LocalDateTime.parse(item.getUpdateDt(), formatter))
-                .build();
+    private RestaurantPayload mapToRestaurant(ApiResponse.Row item) {
+        ProjCoordinate location = convertToWGS84(item.getX(), item.getY());
+        Point point = geometryFactory.createPoint(new Coordinate(location.x, location.y));
+
+        Region region = item.getOpnsfTeamCode() == null ? null : regionMap.get(Long.parseLong(item.getOpnsfTeamCode()));
+
+        return new RestaurantPayload(item, point, region);
     }
 
     public ProjCoordinate convertToWGS84(String x, String y) {
-        if (!StringUtils.hasText(x) || !StringUtils.hasText(y)) {
-            return null;
-        }
-
-        Double longitude = Double.parseDouble(x);
-        Double latitude = Double.parseDouble(y);
+        double longitude = Double.parseDouble(x);
+        double latitude = Double.parseDouble(y);
 
         CRSFactory crsFactory = new CRSFactory();
 
