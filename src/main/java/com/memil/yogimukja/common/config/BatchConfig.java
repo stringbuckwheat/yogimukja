@@ -4,7 +4,7 @@ import com.memil.yogimukja.batch.RestaurantProcessor;
 import com.memil.yogimukja.batch.RestaurantReader;
 import com.memil.yogimukja.batch.RestaurantWriter;
 import com.memil.yogimukja.batch.dto.ApiResponse;
-import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.batch.dto.RestaurantPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -38,7 +38,7 @@ public class BatchConfig {
     @Bean
     public Step restaurant3(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
         return new StepBuilder("restaurant3steps", jobRepository)
-                .<List<ApiResponse.Row>, List<Restaurant>>chunk(2, transactionManager) // 2000개 씩 INSERT
+                .<List<ApiResponse.Row>, List<RestaurantPayload>>chunk(2, transactionManager) // 2000개 씩 INSERT
                 .reader(restaurantReader)
                 .processor(restaurantProcessor)
                 .writer(restaurantWriter)

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -35,6 +36,12 @@ public class ReviewServiceImpl {
     // 맛집 평가
     @Transactional
     public ReviewResponse add(ReviewRequest reviewRequest, Long restaurantId, Long userId) {
+        Optional<Review> existingReview = reviewRepository.findByUser_IdAndRestaurant_Id(userId, restaurantId);
+
+        if(existingReview.isPresent()) {
+            throw new IllegalStateException(ErrorMessage.ALREADY_RATED_RESTAURANT.getMessage());
+        }
+
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new NoSuchElementException(ErrorMessage.RESTAURANT_NOT_FOUND.getMessage()));
 

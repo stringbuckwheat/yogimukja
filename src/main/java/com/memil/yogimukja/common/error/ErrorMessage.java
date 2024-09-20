@@ -12,7 +12,6 @@ public enum ErrorMessage {
     CANNOT_LOGIN("로그인 할 수 없음"),
     ACCESS_TOKEN_EXPIRED("액세스 토큰 만료, 재발급 해주세요."),
     REFRESH_TOKEN_EXPIRED("리프레쉬 토큰 만료. 다시 로그인해주세요"),
-    UNEXPECTED_ERROR_OCCUR("알 수 없는 오류 발생!"),
     REFRESH_TOKEN_NOT_FOUND("Redis에 리프레쉬 토큰이 존재하지 않습니다."),
     NO_REFRESH_TOKEN("리프레쉬 토큰이 존재하지 않습니다."),
     PLEASE_LOGIN("로그인이 필요한 엔드포인트입니다."),
@@ -23,8 +22,16 @@ public enum ErrorMessage {
     REVIEW_NOT_FOUND("해당 리뷰를 찾을 수 없습니다."),
 
     ///// ACCESS_DENIED
-    NOT_YOUR_REVIEW("해당 리뷰를 수정/삭제할 권한이 없어요")
-    ;
+    NOT_YOUR_REVIEW("해당 리뷰를 수정/삭제할 권한이 없어요"),
+
+    ///// CONFLICT
+    ALREADY_RATED_RESTAURANT("이 맛집에는 이미 리뷰를 작성했습니다."),
+
+    ///// ILLEGAL
+    ILLEGAL_RESTAURANT_SORT_OPTION("맛집 정렬은 거리 순, 평점 순 중 하나여야 합니다."),
+
+
+    UNEXPECTED_ERROR_OCCUR("잠시 뒤 다시 시도해주세요");
 
     private String message;
 }

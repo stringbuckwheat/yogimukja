@@ -12,7 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "review")
+@Table(name = "review",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "restaurant_id"})})
+
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Review extends BaseEntity {
