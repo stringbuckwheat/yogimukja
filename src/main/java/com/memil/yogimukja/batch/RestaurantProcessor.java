@@ -2,10 +2,7 @@ package com.memil.yogimukja.batch;
 
 import com.memil.yogimukja.batch.dto.ApiResponse;
 import com.memil.yogimukja.batch.dto.RestaurantPayload;
-import com.memil.yogimukja.restaurant.entity.Region;
-import com.memil.yogimukja.restaurant.entity.Restaurant;
 import com.memil.yogimukja.restaurant.repository.RegionRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -13,28 +10,14 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.proj4j.*;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Lazy
 public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>, List<RestaurantPayload>> {
     private final GeometryFactory geometryFactory = new GeometryFactory();
-    private final RegionRepository regionRepository;
-    private Map<Long, Region> regionMap;
-
-    @PostConstruct
-    public void init() {
-        log.info(">>>>>>>>> Initializing RestaurantProcessor");
-
-        regionMap = regionRepository.findAll().stream()
-                .collect(Collectors.toMap(Region::getId, r -> r));
-    }
 
     @Override
     public List<RestaurantPayload> process(List<ApiResponse.Row> rows) {
@@ -55,9 +38,7 @@ public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>,
         ProjCoordinate location = convertToWGS84(item.getX(), item.getY());
         Point point = geometryFactory.createPoint(new Coordinate(location.x, location.y));
 
-        Region region = item.getOpnsfTeamCode() == null ? null : regionMap.get(Long.parseLong(item.getOpnsfTeamCode()));
-
-        return new RestaurantPayload(item, point, region);
+        return new RestaurantPayload(item, point);
     }
 
     public ProjCoordinate convertToWGS84(String x, String y) {

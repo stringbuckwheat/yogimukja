@@ -72,9 +72,9 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
     private void bulkInsert(List<RestaurantPayload> restaurants) {
         String sql = """
                 INSERT INTO restaurant (
-                    management_id, name, address, location, closed_date, phone_number, restaurant_type, api_updated_at
+                    management_id, name, address, location, closed_date, phone_number, restaurant_type, api_updated_at, region_id 
                 ) VALUES (
-                    ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?
+                    ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?
                 )
                 """;
 
@@ -87,7 +87,8 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getClosedDate(),
                         restaurant.getPhoneNumber(),
                         restaurant.getRestaurantType(),
-                        restaurant.getApiUpdatedAt()
+                        restaurant.getApiUpdatedAt(),
+                        restaurant.getRegionId()
                 })
                 .collect(Collectors.toList());
 
@@ -99,7 +100,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                 UPDATE 
                     restaurant 
                 SET name = ?, address = ?, location = ST_GeomFromText(?, 4326), closed_date = ?, 
-                    phone_number = ?, restaurant_type = ?, api_updated_at = ? 
+                    phone_number = ?, restaurant_type = ?, api_updated_at = ?, region_id = ?
                 WHERE management_id = ?
                 """;
 
@@ -112,6 +113,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getPhoneNumber(),
                         restaurant.getRestaurantType(),
                         restaurant.getApiUpdatedAt(),
+                        restaurant.getRegionId(),
                         restaurant.getManagementId()
                 })
                 .collect(Collectors.toList());
