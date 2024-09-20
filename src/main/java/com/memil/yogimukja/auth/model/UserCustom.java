@@ -17,6 +17,11 @@ public class UserCustom implements UserDetails {
     private String username;
 
     @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
     public boolean isAccountNonExpired() {
         return UserDetails.super.isAccountNonExpired();
     }
@@ -44,10 +49,5 @@ public class UserCustom implements UserDetails {
     @Override
     public String getPassword() {
         return null;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 }

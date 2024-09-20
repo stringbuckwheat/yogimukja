@@ -1,5 +1,6 @@
 package com.memil.yogimukja.common.config;
 
+import com.memil.yogimukja.auth.filter.CustomAuthenticationEntryPoint;
 import com.memil.yogimukja.auth.filter.JwtExceptionFilter;
 import com.memil.yogimukja.auth.filter.JwtFilter;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder(){
@@ -35,7 +36,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/api/user/join", "/api/login", "/api/token/reissue", "/api/logout", "/batch/run").permitAll()
+                                .requestMatchers("/api/user", "/api/login", "/api/token/reissue", "/api/logout", "/batch/run").permitAll()
 
                                 .anyRequest().authenticated()
                 )

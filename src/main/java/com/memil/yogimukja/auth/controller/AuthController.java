@@ -8,7 +8,6 @@ import com.memil.yogimukja.common.util.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +42,7 @@ public class AuthController {
      * @param refreshToken
      * @return 새로운 Access Token
      */
-    @PostMapping("/api/token/reissue")
+    @PostMapping("/api/token")
     public ResponseEntity<String> reissueToken(@CookieValue(name = REFRESH_TOKEN_COOKIE_NAME) String refreshToken){
         return ResponseEntity.ok().body(authService.reissueToken(refreshToken));
     }

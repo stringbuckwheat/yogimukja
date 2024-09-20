@@ -1,5 +1,6 @@
 package com.memil.yogimukja.user.service;
 
+import com.memil.yogimukja.auth.dto.AuthTokens;
 import com.memil.yogimukja.auth.service.AuthService;
 import com.memil.yogimukja.common.error.ErrorMessage;
 import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
@@ -40,7 +41,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void register(UserRequest registerRequest) {
+    public AuthTokens register(UserRequest registerRequest) {
         // 아이디 중복 검사
         hasSameUsername(registerRequest.getUsername());
 
@@ -51,7 +52,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.save(registerRequest.toEntity());
 
         // 로그인 처리
-        authService.authenticateAndGenerateTokens(user.getId(), user.getUsername());
+        return authService.authenticateAndGenerateTokens(user.getId(), user.getUsername());
     }
 
     @Transactional
@@ -89,6 +90,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
 
         user.update(userRequest.getName());
+
         return new UserResponse(user);
     }
 
