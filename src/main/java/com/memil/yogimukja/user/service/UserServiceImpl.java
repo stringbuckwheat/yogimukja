@@ -5,6 +5,7 @@ import com.memil.yogimukja.auth.service.AuthService;
 import com.memil.yogimukja.common.error.ErrorMessage;
 import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
 import com.memil.yogimukja.user.dto.LocationRequest;
+import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
 import com.memil.yogimukja.user.entity.User;
@@ -66,11 +67,11 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void updateLunchRecommendationStatus(Long userId) {
+    public void updateLunchRecommendationStatus(LunchRequest lunchRequest, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException(ErrorMessage.USER_NOT_FOUND.getMessage()));
 
-        user.updateLunchRecommendationEnabled();
+        user.updateDiscordWebhook(lunchRequest.getWebHookUrl());
     }
 
     // 회원 정보

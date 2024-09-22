@@ -6,6 +6,7 @@ import com.memil.yogimukja.auth.model.UserCustom;
 import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
 import com.memil.yogimukja.common.util.CookieUtil;
 import com.memil.yogimukja.user.dto.LocationRequest;
+import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
 import com.memil.yogimukja.user.service.UserService;
@@ -61,8 +62,8 @@ public class UserController {
     }
 
     @PutMapping("/api/user/lunch")
-    public ResponseEntity<Void> updateLunchRecommendationStatus(@AuthenticationPrincipal UserCustom userCustom) {
-        userService.updateLunchRecommendationStatus(userCustom.getId());
+    public ResponseEntity<Void> updateLunchRecommendationStatus(@RequestBody @Valid LunchRequest lunchRequest, @AuthenticationPrincipal UserCustom userCustom) {
+        userService.updateLunchRecommendationStatus(lunchRequest, userCustom.getId());
         return ResponseEntity.noContent().build();
     }
 

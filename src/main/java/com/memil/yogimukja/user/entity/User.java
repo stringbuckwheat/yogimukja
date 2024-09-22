@@ -32,9 +32,8 @@ public class User extends BaseEntity {
     private Double latitude; // 위도
     private Double longitude; // 경도
 
-    // 점심 추천 기능 활성화 여부
-    @ColumnDefault(value = "false")
-    private boolean isLunchRecommendationEnabled;
+    // 점심 추천 기능 활성화 여부 + Discord Webhook
+    private String webHookUrl;
 
     public User(String username, String password, String name) {
         this.username = username;
@@ -51,7 +50,7 @@ public class User extends BaseEntity {
         this.longitude = longitude;
     }
 
-    public void updateLunchRecommendationEnabled() {
-        this.isLunchRecommendationEnabled = !isLunchRecommendationEnabled;
+    public void updateDiscordWebhook(String webHookUrl) {
+        this.webHookUrl = webHookUrl;
     }
 }
