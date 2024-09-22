@@ -27,8 +27,6 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
 
     @PostConstruct
     public void init() {
-        log.info(">>>>>>>>> Initializing Restaurant Writer");
-
         existingRestaurantMap = restaurantQueryRepository.findAllManagementIdAndApiUpdatedAt().stream()
                 .collect(Collectors.toMap(RestaurantOverview::getManagementId, r -> r));
     }
@@ -72,7 +70,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
     private void bulkInsert(List<RestaurantPayload> restaurants) {
         String sql = """
                 INSERT INTO restaurant (
-                    management_id, name, address, location, closed_date, phone_number, restaurant_type, api_updated_at, region_id 
+                    management_id, name, address, location, closed_date, phone_number, type, api_updated_at, region_id 
                 ) VALUES (
                     ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?
                 )
@@ -86,7 +84,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getLocation() != null ? restaurant.getLocation().toText() : null,
                         restaurant.getClosedDate(),
                         restaurant.getPhoneNumber(),
-                        restaurant.getRestaurantType(),
+                        restaurant.getType().getTitle(),
                         restaurant.getApiUpdatedAt(),
                         restaurant.getRegionId()
                 })
@@ -100,7 +98,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                 UPDATE 
                     restaurant 
                 SET name = ?, address = ?, location = ST_GeomFromText(?, 4326), closed_date = ?, 
-                    phone_number = ?, restaurant_type = ?, api_updated_at = ?, region_id = ?
+                    phone_number = ?, type = ?, api_updated_at = ?, region_id = ?
                 WHERE management_id = ?
                 """;
 
@@ -111,7 +109,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getLocation() != null ? restaurant.getLocation().toText() : null,
                         restaurant.getClosedDate(),
                         restaurant.getPhoneNumber(),
-                        restaurant.getRestaurantType(),
+                        restaurant.getType().getTitle(),
                         restaurant.getApiUpdatedAt(),
                         restaurant.getRegionId(),
                         restaurant.getManagementId()

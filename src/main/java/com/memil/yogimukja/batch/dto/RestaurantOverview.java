@@ -1,6 +1,5 @@
 package com.memil.yogimukja.batch.dto;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
