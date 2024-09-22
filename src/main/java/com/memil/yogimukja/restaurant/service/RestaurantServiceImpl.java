@@ -4,10 +4,10 @@ import com.memil.yogimukja.common.error.ErrorMessage;
 import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
 import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import com.memil.yogimukja.restaurant.dto.RestaurantSummary;
-import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.model.Restaurant;
 import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
 import com.memil.yogimukja.restaurant.repository.RestaurantRepository;
-import com.memil.yogimukja.restaurant.repository.ReviewRepository;
+import com.memil.yogimukja.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +36,6 @@ public class RestaurantServiceImpl {
     }
 
     public List<RestaurantSummary> getAllBy(RestaurantQueryParams queryParams) {
-        return restaurantQueryRepository.findRestaurantsWithinDistance(queryParams);
+        return restaurantQueryRepository.findRestaurants(queryParams);
     }
 }

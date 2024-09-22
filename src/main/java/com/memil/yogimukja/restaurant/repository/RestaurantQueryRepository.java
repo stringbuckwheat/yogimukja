@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface RestaurantQueryRepository {
     List<RestaurantOverview> findAllManagementIdAndApiUpdatedAt();
-    List<RestaurantSummary> findRestaurantsWithinDistance(RestaurantQueryParams queryParams);
+    List<RestaurantSummary> findRestaurants(RestaurantQueryParams queryParams);
 }

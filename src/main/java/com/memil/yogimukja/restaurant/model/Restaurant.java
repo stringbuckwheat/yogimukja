@@ -1,5 +1,6 @@
-package com.memil.yogimukja.restaurant.entity;
+package com.memil.yogimukja.restaurant.model;
 
+import com.memil.yogimukja.review.model.Review;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -34,7 +35,7 @@ public class Restaurant {
 
     private String phoneNumber; // 전화번호
 
-    private String restaurantType; // 업태 구분명
+    private String type; // 업태 구분명
 
     private LocalDateTime apiUpdatedAt; // API 수정일
 

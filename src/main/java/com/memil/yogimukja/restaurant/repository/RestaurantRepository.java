@@ -1,6 +1,6 @@
 package com.memil.yogimukja.restaurant.repository;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.model.Restaurant;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 

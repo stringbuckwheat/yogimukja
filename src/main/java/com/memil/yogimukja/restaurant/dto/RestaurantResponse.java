@@ -1,6 +1,6 @@
 package com.memil.yogimukja.restaurant.dto;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.model.Restaurant;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ public class RestaurantResponse {
         this.address = restaurant.getAddress();
         this.latitude = restaurant.getLocation().getY();
         this.longitude = restaurant.getLocation().getX();
-        this.restaurantType = restaurant.getRestaurantType();
+        this.restaurantType = restaurant.getType();
         this.region = restaurant.getRegion().getName();
         this.rate = rate;
     }
@@ -36,7 +36,7 @@ public class RestaurantResponse {
         this.address = restaurant.getAddress();
         this.latitude = restaurant.getLocation().getY();
         this.longitude = restaurant.getLocation().getX();
-        this.restaurantType = restaurant.getRestaurantType();
+        this.restaurantType = restaurant.getType();
 
         if(restaurant.getRegion() != null) {
             this.region = restaurant.getRegion().getName();

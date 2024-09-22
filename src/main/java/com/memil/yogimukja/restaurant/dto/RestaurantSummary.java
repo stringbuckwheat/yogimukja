@@ -1,6 +1,6 @@
 package com.memil.yogimukja.restaurant.dto;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
+import com.memil.yogimukja.restaurant.model.Restaurant;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ public class RestaurantSummary {
         this.id = restaurant.getId();
         this.name = restaurant.getName();
         this.address = restaurant.getAddress();
-        this.restaurantType = restaurant.getRestaurantType();
+        this.restaurantType = restaurant.getType();
         this.rate = rate;
         this.reviewCount = reviewCount;
     }
