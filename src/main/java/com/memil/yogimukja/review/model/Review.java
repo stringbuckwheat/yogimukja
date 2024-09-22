@@ -1,6 +1,7 @@
-package com.memil.yogimukja.restaurant.entity;
+package com.memil.yogimukja.review.model;
 
 import com.memil.yogimukja.common.model.BaseEntity;
+import com.memil.yogimukja.restaurant.model.Restaurant;
 import com.memil.yogimukja.user.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;

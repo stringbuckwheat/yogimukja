@@ -9,6 +9,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,8 +22,9 @@ import java.io.IOException;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JwtExceptionFilter extends OncePerRequestFilter {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -46,7 +48,7 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
      * (401 UNAUTHORIZED 리턴)
      *
      * @param response 응답
-     * @param message 예외 메시지
+     * @param message  예외 메시지
      * @throws IOException
      */
     public void setErrorResponse(HttpServletResponse response, String message) throws IOException {

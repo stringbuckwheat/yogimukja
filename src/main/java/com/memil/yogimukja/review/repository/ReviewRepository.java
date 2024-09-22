@@ -1,6 +1,6 @@
-package com.memil.yogimukja.restaurant.repository;
+package com.memil.yogimukja.review.repository;
 
-import com.memil.yogimukja.restaurant.entity.Review;
+import com.memil.yogimukja.review.model.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

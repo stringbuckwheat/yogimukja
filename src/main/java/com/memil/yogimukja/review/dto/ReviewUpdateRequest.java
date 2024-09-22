@@ -1,4 +1,4 @@
-package com.memil.yogimukja.restaurant.dto;
+package com.memil.yogimukja.review.dto;
 
 import lombok.*;
 

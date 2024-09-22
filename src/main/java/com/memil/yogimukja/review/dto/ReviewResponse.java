@@ -1,7 +1,6 @@
-package com.memil.yogimukja.restaurant.dto;
+package com.memil.yogimukja.review.dto;
 
-import com.memil.yogimukja.restaurant.entity.Restaurant;
-import com.memil.yogimukja.restaurant.entity.Review;
+import com.memil.yogimukja.review.model.Review;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

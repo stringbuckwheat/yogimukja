@@ -1,13 +1,13 @@
-package com.memil.yogimukja.restaurant.service;
+package com.memil.yogimukja.review.service;
 
 import com.memil.yogimukja.common.error.ErrorMessage;
-import com.memil.yogimukja.restaurant.dto.ReviewRequest;
-import com.memil.yogimukja.restaurant.dto.ReviewResponse;
-import com.memil.yogimukja.restaurant.dto.ReviewUpdateRequest;
-import com.memil.yogimukja.restaurant.entity.Restaurant;
-import com.memil.yogimukja.restaurant.entity.Review;
+import com.memil.yogimukja.review.dto.ReviewRequest;
+import com.memil.yogimukja.review.dto.ReviewResponse;
+import com.memil.yogimukja.review.dto.ReviewUpdateRequest;
+import com.memil.yogimukja.restaurant.model.Restaurant;
+import com.memil.yogimukja.review.model.Review;
 import com.memil.yogimukja.restaurant.repository.RestaurantRepository;
-import com.memil.yogimukja.restaurant.repository.ReviewRepository;
+import com.memil.yogimukja.review.repository.ReviewRepository;
 import com.memil.yogimukja.user.entity.User;
 import com.memil.yogimukja.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

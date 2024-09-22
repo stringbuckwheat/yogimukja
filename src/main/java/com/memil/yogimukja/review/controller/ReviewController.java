@@ -1,10 +1,10 @@
-package com.memil.yogimukja.restaurant.controller;
+package com.memil.yogimukja.review.controller;
 
 import com.memil.yogimukja.auth.model.UserCustom;
-import com.memil.yogimukja.restaurant.dto.ReviewRequest;
-import com.memil.yogimukja.restaurant.dto.ReviewResponse;
-import com.memil.yogimukja.restaurant.dto.ReviewUpdateRequest;
-import com.memil.yogimukja.restaurant.service.ReviewServiceImpl;
+import com.memil.yogimukja.review.dto.ReviewRequest;
+import com.memil.yogimukja.review.dto.ReviewResponse;
+import com.memil.yogimukja.review.dto.ReviewUpdateRequest;
+import com.memil.yogimukja.review.service.ReviewServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
