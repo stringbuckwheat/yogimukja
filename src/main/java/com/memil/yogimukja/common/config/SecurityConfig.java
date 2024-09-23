@@ -24,7 +24,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder(){
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/api/user", "/api/login", "/api/token", "/api/logout", "/batch/run").permitAll()
+                                .requestMatchers("/api/user/username", "/api/user", "/api/login", "/api/token", "/api/logout", "/batch/run").permitAll()
 
                                 .anyRequest().authenticated()
                 )

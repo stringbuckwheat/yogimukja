@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.annotations.ColumnDefault;
+import org.locationtech.jts.geom.Point;
 
 @Entity
 @Getter
@@ -29,8 +29,7 @@ public class User extends BaseEntity {
     private String name;
 
     // 위치 정보
-    private Double latitude; // 위도
-    private Double longitude; // 경도
+    private Point location;
 
     // 점심 추천 기능 활성화 여부 + Discord Webhook
     private String webHookUrl;
@@ -45,12 +44,8 @@ public class User extends BaseEntity {
         this.name = name;
     }
 
-    public void updateLocation(Double latitude, Double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
-
-    public void updateDiscordWebhook(String webHookUrl) {
+    public void updateLunchRecommendation(Point location, String webHookUrl) {
+        this.location = location;
         this.webHookUrl = webHookUrl;
     }
 }

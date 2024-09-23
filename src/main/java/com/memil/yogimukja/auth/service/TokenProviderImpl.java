@@ -34,18 +34,25 @@ public class TokenProviderImpl implements TokenProvider {
 
     @PostConstruct
     public void init() {
+        // 애플리케이션 초기화 시, secret 키를 기반으로 HmacSHA256 방식의 Key 생성
         this.key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 
     @Override
     public AccessToken convertAccessToken(String token) {
+        // String token -> Access Token 객체
         return new AccessToken(token, key);
     }
 
     @Override
     public void setAuthentication(Long userId, String username) {
         UserCustom userCustom = new UserCustom(userId, username);
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userCustom, null, Collections.singleton(new SimpleGrantedAuthority("USER")));
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                userCustom,
+                null,
+                Collections.singleton(new SimpleGrantedAuthority("USER"))
+        );
+
         SecurityContextHolder.getContext().setAuthentication(token);
     }
 
@@ -66,6 +73,7 @@ public class TokenProviderImpl implements TokenProvider {
     }
 
     public AccessToken refreshAccessToken(String refreshToken) {
+        // Redis 조회
         ActiveUser activeUser = activeUserRepository.findById(refreshToken)
                 .orElseThrow(() -> new NoSuchElementException(ErrorMessage.REFRESH_TOKEN_NOT_FOUND.getMessage()));
 

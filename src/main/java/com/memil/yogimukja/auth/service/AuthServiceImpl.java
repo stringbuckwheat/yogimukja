@@ -37,11 +37,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException(ErrorMessage.WRONG_PASSWORD.getMessage());
         }
 
-        return authenticateAndGenerateTokens(user.getId(), user.getUsername());
+        return authenticateAndGenerateTokens(user);
     }
 
     @Override
-    public AuthTokens authenticateAndGenerateTokens(Long userId, String username) {
+    public AuthTokens authenticateAndGenerateTokens(User user) {
+        Long userId = user.getId();
+        String username = user.getUsername();
+
         // Security Context 저장
         tokenProvider.setAuthentication(userId, username);
 
@@ -49,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
         AccessToken accessToken = tokenProvider.generateAccessToken(userId, username);
         RefreshToken refreshToken = tokenProvider.generateRefreshToken(userId, username);
 
-        return new AuthTokens(refreshToken.getToken(), accessToken.getToken(), username);
+        return new AuthTokens(refreshToken.getToken(), accessToken.getToken(), user);
     }
 
     @Override

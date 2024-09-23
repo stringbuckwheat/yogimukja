@@ -4,18 +4,20 @@ import com.memil.yogimukja.user.entity.User;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
-
 @Getter
 @ToString
 public class UserResponse {
     private String username;
     private String name;
-    private LocalDateTime createdAt;
+    private Double latitude;
+    private Double longitude;
+    private String webHookUrl;
 
     public UserResponse(User user) {
         this.username = user.getUsername();
         this.name = user.getName();
-        this.createdAt = user.getCreatedDate();
+        this.latitude = user.getLocation() == null ? null : user.getLocation().getY();
+        this.longitude = user.getLocation() == null ? null : user.getLocation().getX();
+        this.webHookUrl = user.getWebHookUrl();
     }
 }

@@ -4,7 +4,6 @@ import com.memil.yogimukja.auth.dto.AuthTokens;
 import com.memil.yogimukja.auth.service.AuthService;
 import com.memil.yogimukja.common.error.ErrorMessage;
 import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
-import com.memil.yogimukja.user.dto.LocationRequest;
 import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
@@ -12,12 +11,14 @@ import com.memil.yogimukja.user.entity.User;
 import com.memil.yogimukja.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthService authService;
+    private final GeometryFactory geometryFactory;
 
     @Override
     @Transactional(readOnly = true)
@@ -53,25 +55,19 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.save(registerRequest.toEntity());
 
         // 로그인 처리
-        return authService.authenticateAndGenerateTokens(user.getId(), user.getUsername());
-    }
-
-    @Transactional
-    @Override
-    public void updateLocation(LocationRequest locationRequest, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException(ErrorMessage.USER_NOT_FOUND.getMessage()));
-
-        user.updateLocation(locationRequest.getLatitude(), locationRequest.getLongitude());
+        return authService.authenticateAndGenerateTokens(user);
     }
 
     @Transactional
     @Override
     public void updateLunchRecommendationStatus(LunchRequest lunchRequest, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException(ErrorMessage.USER_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
 
-        user.updateDiscordWebhook(lunchRequest.getWebHookUrl());
+        Point point = geometryFactory.createPoint(new Coordinate(lunchRequest.getLongitude(), lunchRequest.getLatitude()));
+
+        // 디스코드 웹훅 주소 저장
+        user.updateLunchRecommendation(point, lunchRequest.getWebHookUrl());
     }
 
     // 회원 정보
