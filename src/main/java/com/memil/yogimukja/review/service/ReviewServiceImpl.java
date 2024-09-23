@@ -1,9 +1,9 @@
 package com.memil.yogimukja.review.service;
 
 import com.memil.yogimukja.common.error.ErrorMessage;
+import com.memil.yogimukja.review.dto.ReviewDetail;
 import com.memil.yogimukja.review.dto.ReviewRequest;
 import com.memil.yogimukja.review.dto.ReviewResponse;
-import com.memil.yogimukja.review.dto.ReviewUpdateRequest;
 import com.memil.yogimukja.restaurant.model.Restaurant;
 import com.memil.yogimukja.review.model.Review;
 import com.memil.yogimukja.restaurant.repository.RestaurantRepository;
@@ -12,6 +12,7 @@ import com.memil.yogimukja.user.entity.User;
 import com.memil.yogimukja.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,11 +30,19 @@ public class ReviewServiceImpl {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<ReviewResponse> getMyAllReview(Long userId) {
-        return reviewRepository.findByUser_Id(userId).stream().map(ReviewResponse::new).toList();
+    public List<ReviewDetail> getMyAllReview(Long userId, Pageable pageable) {
+        // 레스토랑 정보도 필요
+        return reviewRepository.findByUser_Id(userId, pageable).stream().map(ReviewDetail::new).toList();
     }
 
-    // 맛집 평가
+    @Transactional(readOnly = true)
+    public List<ReviewResponse> getReviews(Long restaurantId, Pageable pageable) {
+        return reviewRepository.findByRestaurant_id(restaurantId, pageable).stream()
+                .map(ReviewResponse::new)
+                .toList();
+    }
+
+    // 맛집 리뷰 등록
     @Transactional
     public ReviewResponse add(ReviewRequest reviewRequest, Long restaurantId, Long userId) {
         Optional<Review> existingReview = reviewRepository.findByUser_IdAndRestaurant_Id(userId, restaurantId);
@@ -62,19 +71,11 @@ public class ReviewServiceImpl {
 
     // 맛집 평가 수정
     @Transactional
-    public ReviewResponse update(ReviewUpdateRequest request) {
-        Review review = getReview(request.getReviewId(), request.getUserId());
-
-        Restaurant restaurant = review.getRestaurant();
-
-        // 변경 시 Restaurant 조회
-        if(!restaurant.getId().equals(request.getRestaurantId())) {
-            restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new NoSuchElementException(ErrorMessage.RESTAURANT_NOT_FOUND.getMessage()));
-        }
+    public ReviewResponse update(Long reviewId, Long userId, ReviewRequest request) {
+        Review review = getReview(reviewId, userId);
 
         // 상태 업데이트
-        review.update(restaurant, request.getReviewRequest().getRate(), request.getReviewRequest().getContent());
+        review.update(request.getRate(), request.getContent());
 
         return new ReviewResponse(review);
     }

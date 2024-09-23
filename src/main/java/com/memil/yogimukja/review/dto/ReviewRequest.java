@@ -13,6 +13,4 @@ public class ReviewRequest {
     private Integer rate; // 점수
 
     private String content; // 내용 (빈 칸 가능)
-
-    private Long restaurantId;
 }
