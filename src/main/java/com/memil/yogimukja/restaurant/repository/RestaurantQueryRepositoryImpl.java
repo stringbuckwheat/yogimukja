@@ -2,9 +2,7 @@ package com.memil.yogimukja.restaurant.repository;
 
 import com.memil.yogimukja.batch.dto.QRestaurantOverview;
 import com.memil.yogimukja.batch.dto.RestaurantOverview;
-import com.memil.yogimukja.restaurant.dto.QRestaurantSummary;
-import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
-import com.memil.yogimukja.restaurant.dto.RestaurantSummary;
+import com.memil.yogimukja.restaurant.dto.*;
 import com.memil.yogimukja.restaurant.enums.RestaurantSort;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -13,6 +11,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,6 +25,7 @@ import static com.memil.yogimukja.review.model.QReview.review;
 public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository {
     private final JPAQueryFactory queryFactory;
 
+    // Batch에서 사용
     @Override
     public List<RestaurantOverview> findAllManagementIdAndApiUpdatedAt() {
         return queryFactory
@@ -39,13 +39,37 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .fetch();
     }
 
+    public RestaurantResponse findDetail(Long restaurantId) {
+        return queryFactory
+                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
+                .from(restaurant)
+                .leftJoin(restaurant.reviews, review)
+                .where(restaurant.id.eq(restaurantId))
+                .groupBy(restaurant.id)
+                .fetchOne();
+    }
+
     @Override
-    public List<RestaurantSummary> findRestaurants(RestaurantQueryParams queryParams) {
+    public List<RestaurantResponse> findByRegion(Long regionId, Pageable pageable) {
+        return queryFactory
+                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
+                .from(restaurant)
+                .leftJoin(restaurant.reviews, review)
+                .where(restaurant.region.id.eq(regionId))
+                .groupBy(restaurant.id)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(review.rate.avg().asc())
+                .fetch();
+    }
+
+    @Override
+    public List<RestaurantResponse> findBy(RestaurantQueryParams queryParams) {
         OrderSpecifier<?> orderBy = createOrderBy(queryParams);
         BooleanBuilder whereClause = createWhereClause(queryParams);
 
         return queryFactory
-                .select(new QRestaurantSummary(restaurant, review.rate.avg(), review.rate.count()))
+                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
                 .from(restaurant)
                 .leftJoin(restaurant.reviews, review)
                 .where(whereClause)

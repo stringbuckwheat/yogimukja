@@ -13,13 +13,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RestaurantQueryParams {
-    private Double latitude;
-    private Double longitude;
-    private Double range;
-    private RestaurantSort sort;
-    private String search;
-    private List<RestaurantType> type;
-    private Pageable pageable;
+    private Double latitude; // 위도
+    private Double longitude; // 경도
+    private Double range; // 범위
+    private RestaurantSort sort; // 정렬
+    private String search; // 검색어
+    private List<RestaurantType> type; // 업태 구분 명(한식, 중식 ...)
+    private Pageable pageable; // 페이징
 
     public RestaurantQueryParams(Double latitude, Double longitude, Double range, String sort, String search, List<String> type, Pageable pageable) {
         this.latitude = latitude;

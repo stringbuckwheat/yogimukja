@@ -1,5 +1,6 @@
 package com.memil.yogimukja.restaurant.model;
 
+import com.memil.yogimukja.region.model.Region;
 import com.memil.yogimukja.review.model.Review;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

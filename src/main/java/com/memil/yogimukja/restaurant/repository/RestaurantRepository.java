@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
-    Restaurant findByNameAndAddress(String name, String address);
-
     @EntityGraph(attributePaths = {"region"})
     Optional<Restaurant> findById(Long id);
 }
