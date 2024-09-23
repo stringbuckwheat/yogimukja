@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.memil.yogimukja.restaurant.model.QRestaurant.restaurant;
 import static com.memil.yogimukja.review.model.QReview.review;
@@ -39,14 +40,16 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .fetch();
     }
 
-    public RestaurantResponse findDetail(Long restaurantId) {
-        return queryFactory
+    public Optional<RestaurantResponse> findDetail(Long restaurantId) {
+        RestaurantResponse result =  queryFactory
                 .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
                 .from(restaurant)
                 .leftJoin(restaurant.reviews, review)
                 .where(restaurant.id.eq(restaurantId))
                 .groupBy(restaurant.id)
                 .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 
     @Override

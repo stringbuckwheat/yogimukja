@@ -6,6 +6,7 @@ import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RestaurantQueryRepository {
     /**
@@ -18,10 +19,11 @@ public interface RestaurantQueryRepository {
 
     /**
      * 맛집 상세 정보
+     *
      * @param restaurantId 레스토랑 ID
      * @return 레스토랑의 상세 정보
      */
-    RestaurantResponse findDetail(Long restaurantId);
+    Optional<RestaurantResponse> findDetail(Long restaurantId);
 
     /**
      * 주어진 쿼리 파라미터에 기반하여 식당 목록 조회

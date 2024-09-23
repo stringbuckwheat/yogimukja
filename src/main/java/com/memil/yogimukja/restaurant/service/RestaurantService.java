@@ -14,7 +14,6 @@ public interface RestaurantService {
      * @param restaurantId 레스토랑 ID
      * @return 레스토랑의 상세 정보
      */
-    @Transactional(readOnly = true)
     RestaurantResponse getDetail(Long restaurantId);
 
     /**
