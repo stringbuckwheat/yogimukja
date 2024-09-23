@@ -29,7 +29,6 @@ public class RestaurantDataFetcher {
                 .flatMap(response -> Flux.fromIterable(response.getLocaldata().getRow()));
     }
 
-
     public Mono<ApiResponse> fetchInitialData() {
         return webClient.get()
                 .uri("/1/2") // 초기 데이터 및 ListTotalCount 값을 반환하는 API 엔드포인트

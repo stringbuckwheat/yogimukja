@@ -1,9 +1,8 @@
 package com.memil.yogimukja.recommend.scheduler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.memil.yogimukja.recommend.service.DiscordWebhookServiceImpl;
 import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
-import com.memil.yogimukja.restaurant.dto.RestaurantSummary;
+import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import com.memil.yogimukja.restaurant.enums.RestaurantSort;
 import com.memil.yogimukja.restaurant.enums.RestaurantType;
 import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -29,9 +27,6 @@ public class LunchRecommendationScheduler {
     private final RestaurantQueryRepository restaurantQueryRepository;
     private final DiscordWebhookServiceImpl discordWebhookService;
     private static final List<String> EXCLUDE_TYPES = List.of("술집", "카페/디저트");
-
-    // TODO 점심 추천에서 카페, 술집 이런 건 제외
-
 
     // 스케줄링: 11시 30분
     @Scheduled(cron = "0 30 11 * * ?")
@@ -47,15 +42,15 @@ public class LunchRecommendationScheduler {
                         .filter(type -> !EXCLUDE_TYPES.contains(type.name())).toList();
 
                 RestaurantQueryParams queryParams = RestaurantQueryParams.builder()
-                        .latitude(user.getLatitude())
-                        .longitude(user.getLongitude())
+                        .latitude(user.getLocation().getY())
+                        .longitude(user.getLocation().getX())
                         .range(500.0)
                         .sort(RestaurantSort.RATING)
                         .pageable(PageRequest.of(0, 5))
                         .type(validRestaurantType)
                         .build();
 
-                List<RestaurantSummary> restaurants = restaurantQueryRepository.findRestaurants(queryParams);
+                List<RestaurantResponse> restaurants = restaurantQueryRepository.findBy(queryParams);
 
                 String message = sendPlainTextMessage(user.getName(), restaurants);
                 discordWebhookService.sendMessage(webhookUrl, message).subscribe();
@@ -63,13 +58,13 @@ public class LunchRecommendationScheduler {
         });
     }
 
-    public String sendPlainTextMessage(String name, List<RestaurantSummary> nearbyRestaurants) {
+    public String sendPlainTextMessage(String name, List<RestaurantResponse> nearbyRestaurants) {
         StringBuilder messageBuilder = new StringBuilder();
         String date = new SimpleDateFormat("yyyy년 MM월 dd일").format(new Date());
 
         messageBuilder.append("👍 ").append(name).append("님의 ").append(date).append(" 점심 추천 리스트가 도착했어요!\n\n");
 
-        for (RestaurantSummary restaurant : nearbyRestaurants) {
+        for (RestaurantResponse restaurant : nearbyRestaurants) {
             String rateInfo = "평점: " + (restaurant.getRate() != null ? restaurant.getRate() : "N/A");
             String reviewInfo = "리뷰 수: " + (restaurant.getReviewCount() > 0 ? restaurant.getReviewCount() : "아직 리뷰가 없습니다.");
 

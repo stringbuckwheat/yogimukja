@@ -1,4 +1,4 @@
-package com.memil.yogimukja.restaurant.model;
+package com.memil.yogimukja.region.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

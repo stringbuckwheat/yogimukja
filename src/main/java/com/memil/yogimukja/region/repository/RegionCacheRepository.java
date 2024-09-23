@@ -1,7 +1,7 @@
-package com.memil.yogimukja.restaurant.repository;
+package com.memil.yogimukja.region.repository;
 
 
-import com.memil.yogimukja.restaurant.model.CachedRegion;
+import com.memil.yogimukja.region.model.CachedRegion;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,14 +1,13 @@
 package com.memil.yogimukja.common.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ObjectMapperConfig {
-
+public class BeanConfig {
     @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+    public GeometryFactory geometryFactory() {
+        return new GeometryFactory();
     }
 }

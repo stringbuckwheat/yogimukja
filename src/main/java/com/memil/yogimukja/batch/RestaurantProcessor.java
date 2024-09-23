@@ -22,7 +22,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>, List<RestaurantPayload>> {
-    private final GeometryFactory geometryFactory = new GeometryFactory();
+    private final GeometryFactory geometryFactory;
 
     private static final List<String> EXCLUDED_TYPES = Arrays.asList(
             "이동조리",
