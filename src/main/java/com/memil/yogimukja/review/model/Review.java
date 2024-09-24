@@ -11,6 +11,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "review",
@@ -29,6 +31,7 @@ public class Review extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull(message = "리뷰를 작성하려면 사용자 정보가 필요합니다.")
+    @OnDelete(action= OnDeleteAction.CASCADE)
     private User user;
 
     @NotNull(message = "점수는 필수값입니다.")

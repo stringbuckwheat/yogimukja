@@ -41,6 +41,11 @@ public class ReviewController {
         return ResponseEntity.ok().body(reviewService.getReviews(restaurantId, sortedPageable));
     }
 
+    @GetMapping("/api/review")
+    public ResponseEntity<List<ReviewResponse>> getRecentReviews(@PageableDefault(page = 0, size = 10) Pageable pageable) {
+        return ResponseEntity.ok().body(reviewService.getRecentReviews(pageable));
+    }
+
     @PostMapping("/api/restaurant/{id}/review")
     public ResponseEntity<ReviewResponse> add(@RequestBody @Valid ReviewRequest request,
                                               @PathVariable(name = "id") Long restaurantId,

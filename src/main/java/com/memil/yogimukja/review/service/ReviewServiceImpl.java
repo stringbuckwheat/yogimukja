@@ -42,6 +42,13 @@ public class ReviewServiceImpl {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<ReviewResponse> getRecentReviews(Pageable pageable) {
+        return reviewRepository.findAllByOrderByCreatedDateDesc(pageable).stream()
+                .map(ReviewResponse::new)
+                .toList();
+    }
+
     // 맛집 리뷰 등록
     @Transactional
     public ReviewResponse add(ReviewRequest reviewRequest, Long restaurantId, Long userId) {
