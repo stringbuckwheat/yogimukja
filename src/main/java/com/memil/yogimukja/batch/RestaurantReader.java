@@ -1,8 +1,10 @@
 package com.memil.yogimukja.batch;
 
 import com.memil.yogimukja.batch.dto.ApiResponse;
+import com.memil.yogimukja.batch.dto.Range;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 @Slf4j
 @Component
+@DependsOn("restaurantDataFetcher")
 public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
 
     private final RestaurantDataFetcher dataFetcher;
@@ -20,9 +23,6 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
 
     public RestaurantReader(RestaurantDataFetcher dataFetcher) {
         this.dataFetcher = dataFetcher;
-        initializeEndValue()
-                .doOnSuccess(aVoid -> initializeRanges())
-                .block();
     }
 
     private Mono<Void> initializeEndValue() {
@@ -31,6 +31,7 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
                 .doOnNext(value -> {
                     this.end = value;
                     log.info("Dynamic end value set to: {}", end);
+                    initializeRanges();  // initializeRanges()를 여기에 이동
                 })
                 .then();
     }
@@ -44,6 +45,11 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
 
     @Override
     public List<ApiResponse.Row> read() {
+        // end 값이 초기화되지 않았다면 초기화 로직 수행
+        if (end == 0) {
+            initializeEndValue().block();  // 초기화가 끝날 때까지 대기
+        }
+
         Range range = rangeQueue.poll();
 
         if (range == null) {
@@ -58,23 +64,5 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
                 .collectList()
                 .doOnError(e -> log.error("Error fetching data for range: {}-{}", range.getStart(), range.getEnd(), e))
                 .block();
-    }
-
-    private static class Range {
-        private final int start;
-        private final int end;
-
-        public Range(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        public int getStart() {
-            return start;
-        }
-
-        public int getEnd() {
-            return end;
-        }
     }
 }
