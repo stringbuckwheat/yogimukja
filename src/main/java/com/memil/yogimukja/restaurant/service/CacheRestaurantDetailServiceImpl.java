@@ -9,11 +9,13 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class RestaurantCacheServiceImpl implements RestaurantCacheService {
+public class CacheRestaurantDetailServiceImpl implements CacheRestaurantDetailService {
     private final RestaurantViewRepository restaurantViewRepository; // Redis 조회수 저장 리파지토리
     private final CacheManager cacheManager;
     private static final int THRESHOLD = 10; // 캐시 기준 조회수
@@ -29,15 +31,10 @@ public class RestaurantCacheServiceImpl implements RestaurantCacheService {
     }
 
     @Override
-    public RestaurantResponse fetchFromCache(Long restaurantId) {
-        Cache cache = cacheManager.getCache("restaurantDetails");
-
-        if (cache != null) {
-            var cachedValue = cache.get(restaurantId);
-            return (cachedValue != null) ? (RestaurantResponse) cachedValue.get() : null;
-        }
-
-        return null;
+    public Optional<RestaurantResponse> fetchFromCache(Long restaurantId) {
+        return Optional.ofNullable(cacheManager.getCache("restaurantDetails"))
+                .map(cache -> cache.get(restaurantId))
+                .map(cachedValue -> (RestaurantResponse) cachedValue.get());
     }
 
     @Override

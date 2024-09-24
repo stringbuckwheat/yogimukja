@@ -7,7 +7,7 @@ import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-@RedisHash("restaurantViews")
+@RedisHash(value = "restaurantViews", timeToLive = 3600) // 지속시간 1시간
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

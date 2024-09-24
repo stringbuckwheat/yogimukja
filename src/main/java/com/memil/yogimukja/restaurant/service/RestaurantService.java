@@ -5,6 +5,7 @@ import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface RestaurantService {
@@ -15,6 +16,15 @@ public interface RestaurantService {
      * @return 레스토랑의 상세 정보
      */
     RestaurantResponse getDetail(Long restaurantId);
+
+    /**
+     * 해당 날짜 이후 오늘까지 리뷰가 등록된 식당을 평점순으로 정렬하여 반환
+     * 결과는 캐싱
+     *
+     * @param startDate 필터링 시작일
+     * @return 조건에 맞는 식당 리스트
+     */
+    List<RestaurantResponse> getPopular(LocalDateTime startDate);
 
     /**
      * 주어진 쿼리 파라미터에 기반하여 식당 목록 조회

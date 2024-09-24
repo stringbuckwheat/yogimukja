@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +42,7 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
     }
 
     public Optional<RestaurantResponse> findDetail(Long restaurantId) {
-        RestaurantResponse result =  queryFactory
+        RestaurantResponse result = queryFactory
                 .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
                 .from(restaurant)
                 .leftJoin(restaurant.reviews, review)
@@ -50,6 +51,17 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    public List<RestaurantResponse> findPopular(LocalDateTime startDate) {
+        return queryFactory
+                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
+                .from(restaurant)
+                .join(restaurant.reviews, review)
+                .where(review.createdDate.after(startDate))
+                .groupBy(restaurant.id)
+                .orderBy(review.rate.avg().desc())
+                .fetch();
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
 import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,14 @@ public interface RestaurantQueryRepository {
      * @return 레스토랑의 상세 정보
      */
     Optional<RestaurantResponse> findDetail(Long restaurantId);
+
+    /**
+     * startDate부터 오늘까지 리뷰가 많이 등록된 식당을 평점 순으로 정렬하여 반환
+     *
+     * @param startDate 필터링 시작 날짜
+     * @return 조건에 맞는 식당 리스트
+     */
+    List<RestaurantResponse> findPopular(LocalDateTime startDate);
 
     /**
      * 주어진 쿼리 파라미터에 기반하여 식당 목록 조회

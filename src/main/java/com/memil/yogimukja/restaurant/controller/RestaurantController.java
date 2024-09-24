@@ -2,7 +2,7 @@ package com.memil.yogimukja.restaurant.controller;
 
 import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
 import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
-import com.memil.yogimukja.restaurant.service.RestaurantServiceImpl;
+import com.memil.yogimukja.restaurant.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -10,13 +10,15 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class RestaurantController {
-    private final RestaurantServiceImpl restaurantService;
+    private final RestaurantService restaurantService;
 
     /**
      * 식당 상세 정보 조회
@@ -27,6 +29,16 @@ public class RestaurantController {
     @GetMapping("/api/restaurant/{id}")
     public ResponseEntity<RestaurantResponse> getDetail(@PathVariable(name = "id") Long restaurantId) {
         return ResponseEntity.ok().body(restaurantService.getDetail(restaurantId));
+    }
+
+    /**
+     * 최근 일주일 간 리뷰가 올라온 식당 리스트 (10개)
+     * @return 최근 일주일 간 리뷰가 올라온 식당 상세 정보 리스트
+     */
+    @GetMapping("/api/restaurant/popular")
+    public ResponseEntity<List<RestaurantResponse>> getPopular() {
+        LocalDateTime startDate = LocalDate.now().minusDays(7).atStartOfDay();
+        return ResponseEntity.ok().body(restaurantService.getPopular(startDate));
     }
 
     /**
