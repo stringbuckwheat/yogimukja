@@ -24,24 +24,27 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ReviewServiceImpl {
+public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
 
+    @Override
     @Transactional(readOnly = true)
     public List<ReviewDetail> getMyAllReview(Long userId, Pageable pageable) {
         // 레스토랑 정보도 필요
         return reviewRepository.findByUser_Id(userId, pageable).stream().map(ReviewDetail::new).toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public List<ReviewResponse> getReviews(Long restaurantId, Pageable pageable) {
+    public List<ReviewResponse> getReviewsBy(Long restaurantId, Pageable pageable) {
         return reviewRepository.findByRestaurant_id(restaurantId, pageable).stream()
                 .map(ReviewResponse::new)
                 .toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<ReviewResponse> getRecentReviews(Pageable pageable) {
         return reviewRepository.findAllByOrderByCreatedDateDesc(pageable).stream()
@@ -50,6 +53,7 @@ public class ReviewServiceImpl {
     }
 
     // 맛집 리뷰 등록
+    @Override
     @Transactional
     public ReviewResponse add(ReviewRequest reviewRequest, Long restaurantId, Long userId) {
         Optional<Review> existingReview = reviewRepository.findByUser_IdAndRestaurant_Id(userId, restaurantId);
@@ -77,6 +81,7 @@ public class ReviewServiceImpl {
     }
 
     // 맛집 평가 수정
+    @Override
     @Transactional
     public ReviewResponse update(Long reviewId, Long userId, ReviewRequest request) {
         Review review = getReview(reviewId, userId);
@@ -88,6 +93,7 @@ public class ReviewServiceImpl {
     }
 
     // 맛집 평가 삭제
+    @Override
     @Transactional
     public void delete(Long reviewId, Long userId) {
         Review review = getReview(reviewId, userId);
