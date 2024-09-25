@@ -18,6 +18,13 @@ public class RestaurantResponse implements Serializable {
     private String type; // 업태 구분명
     private Double rate;
     private Long reviewCount;
+    private Integer distance; // 미터 단위
+
+    @QueryProjection
+    public RestaurantResponse(Restaurant restaurant, Double rate, Long reviewCount, Double distance) {
+        this(restaurant, rate, reviewCount);
+        this.distance = distance != null ? distance.intValue() : null;
+    }
 
     @QueryProjection
     public RestaurantResponse(Restaurant restaurant, Double rate, Long reviewCount) {

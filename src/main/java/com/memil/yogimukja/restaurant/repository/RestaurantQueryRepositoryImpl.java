@@ -7,10 +7,13 @@ import com.memil.yogimukja.restaurant.enums.RestaurantSort;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparablePath;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -43,7 +46,13 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
 
     public Optional<RestaurantResponse> findDetail(Long restaurantId) {
         RestaurantResponse result = queryFactory
-                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
+                .select(
+                        new QRestaurantResponse(
+                                restaurant,
+                                review.rate.avg(),
+                                review.rate.count()
+                        )
+                )
                 .from(restaurant)
                 .leftJoin(restaurant.reviews, review)
                 .where(restaurant.id.eq(restaurantId))
@@ -53,10 +62,21 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
         return Optional.ofNullable(result);
     }
 
-    public List<RestaurantResponse> findPopular(LocalDateTime startDate) {
+    @Override
+    public List<RestaurantResponse> findPopular(LocalDateTime startDate, UserLocation userLocation) {
         return queryFactory
-                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
-                .from(restaurant)
+                .select(
+                        new QRestaurantResponse(
+                                restaurant,
+                                review.rate.avg(),
+                                review.rate.count(),
+                                getDistanceTemplate(
+                                        restaurant.location,
+                                        userLocation.getLatitude(),
+                                        userLocation.getLongitude()
+                                )
+                        )
+                ).from(restaurant)
                 .join(restaurant.reviews, review)
                 .where(review.createdDate.after(startDate))
                 .groupBy(restaurant.id)
@@ -65,16 +85,29 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
     }
 
     @Override
-    public List<RestaurantResponse> findByRegion(Long regionId, Pageable pageable) {
+    public List<RestaurantResponse> findByRegion(Long regionId, Pageable pageable, UserLocation userLocation) {
         return queryFactory
-                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
+                .select(
+                        new QRestaurantResponse(
+                                restaurant,
+                                review.rate.avg(),
+                                review.rate.count(),
+                                getDistanceTemplate(
+                                        restaurant.location,
+                                        userLocation.getLatitude(),
+                                        userLocation.getLongitude()
+                                )
+                        )
+                )
                 .from(restaurant)
                 .leftJoin(restaurant.reviews, review)
                 .where(restaurant.region.id.eq(regionId))
                 .groupBy(restaurant.id)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(review.rate.avg().asc())
+                .orderBy(
+                        review.rate.avg().coalesce(0.0).desc()  // null 값을 0으로 대체
+                )
                 .fetch();
     }
 
@@ -84,8 +117,18 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
         BooleanBuilder whereClause = createWhereClause(queryParams);
 
         return queryFactory
-                .select(new QRestaurantResponse(restaurant, review.rate.avg(), review.rate.count()))
-                .from(restaurant)
+                .select(
+                        new QRestaurantResponse(
+                                restaurant,
+                                review.rate.avg(),
+                                review.rate.count(),
+                                getDistanceTemplate(
+                                        restaurant.location,
+                                        queryParams.getLatitude(),
+                                        queryParams.getLongitude()
+                                )
+                        )
+                ).from(restaurant)
                 .leftJoin(restaurant.reviews, review)
                 .where(whereClause)
                 .groupBy(restaurant.id)
@@ -95,9 +138,20 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .fetch();
     }
 
+    private NumberTemplate<Double> getDistanceTemplate(ComparablePath<Point> restaurantLocation, Double latitude, Double longitude) {
+        // PostGIS ST_DistanceSphere 함수 사용하여 두 지점 간의 거리 계산
+        return Expressions.numberTemplate(
+                Double.class,
+                "ST_DistanceSphere({0}, ST_MakePoint({1}, {2}))",
+                restaurantLocation, longitude, latitude
+        );
+    }
+
     private OrderSpecifier<?> createOrderBy(RestaurantQueryParams queryParams) {
         // 거리 순
-        if (hasLocation(queryParams) && queryParams.getSort().equals(RestaurantSort.DISTANCE)) {
+        if (queryParams.getLatitude() != null
+                && queryParams.getLongitude() != null
+                && queryParams.getSort().equals(RestaurantSort.DISTANCE)) {
             return Expressions.booleanTemplate(
                     "ST_DistanceSphere({0}, ST_MakePoint({1}, {2}))",
                     restaurant.location, queryParams.getLongitude(), queryParams.getLatitude()

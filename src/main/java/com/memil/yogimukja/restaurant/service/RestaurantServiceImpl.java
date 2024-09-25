@@ -3,6 +3,7 @@ package com.memil.yogimukja.restaurant.service;
 import com.memil.yogimukja.common.error.ErrorMessage;
 import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
 import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
+import com.memil.yogimukja.restaurant.dto.UserLocation;
 import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +45,11 @@ public class RestaurantServiceImpl implements RestaurantService {
         return cacheRestaurantDetailService.cacheRestaurantDetail(restaurantId, restaurant);
     }
 
+    @Override
     @Cacheable(cacheNames = "reviewTopRestaurant", key = "#p0")
-    public List<RestaurantResponse> getPopular(LocalDateTime startDate) {
+    public List<RestaurantResponse> getPopular(LocalDateTime startDate, UserLocation userLocation) {
         // 최근 리뷰 점수가 높은 식당들 10개 반환
-        return restaurantQueryRepository.findPopular(startDate);
+        return restaurantQueryRepository.findPopular(startDate, userLocation);
     }
 
     @Override
@@ -58,7 +60,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RestaurantResponse> getByRegion(Long regionId, Pageable pageable) {
-        return restaurantQueryRepository.findByRegion(regionId, pageable);
+    public List<RestaurantResponse> getByRegion(Long regionId, Pageable pageable, UserLocation userLocation) {
+        return restaurantQueryRepository.findByRegion(regionId, pageable, userLocation);
     }
 }
