@@ -1,17 +1,17 @@
 ## 목차
-1. [요기먹자?](#-요기먹자)
+1. 요기먹자?
    * [API 문서](https://documenter.getpostman.com/view/31325959/2sAXxLCEcn)
    * 기술 스택
    * ERD
-2. [주요 기능](#-주요-기능)
-   * 대용량 INSERT/UPDATE 작업을 위한 [Spring Batch 구현](#-1\)-대용량-INSERT/UPDATE-작업을-위한-Spring Batch-구현)
+2. 주요 기능
+   * 대용량 INSERT/UPDATE 작업을 위한 Spring Batch 구현
      * 511,273건의 데이터 Batch 작업에 4.72분 소요
      * Batch 처리 과정
-   * [Redis 캐싱을 사용한 빠른 응답](#-2\)-Redis-캐싱을-사용한-빠른-응답)
-   * Scheduler를 활용한 [점심 추천 식당 리스트 비동기 알림 전송](#-3\)-Scheduler를-활용한-점심-추천-식당-리스트-비동기-알림-전송)
-3. [트러블 슈팅](#-트러블-슈팅)
-   * Batch 작업 중 발생한 [동시성 문제 해결](#-1\)-Batch-작업-중-발생한-동시성 문제 해결)
-   * Batch 처리 속도 향상을 위한 [JDBC Template 도입](#-2\)-Batch-처리-속도-향상을-위한-JDBC-Template-도입)
+   * Redis 캐싱을 사용한 빠른 응답
+   * Scheduler를 활용한 점심 추천 식당 리스트 비동기 알림 전송
+3. 트러블 슈팅
+   * Batch 작업 중 발생한 동시성 문제 해결
+   * Batch 처리 속도 향상을 위한 JDBC Template 도입
 
 
 # 요기먹자🍜🍣🥗
@@ -24,7 +24,7 @@
 * 점심 추천 기능: 매일 11시 30분에 사용자 위치 근방의 식당을 추천합니다.
 
 
-## 기술스택
+## 기술 스택
 * `Spring Boot(3.3)`
   * Webflux
   * Spring Batch
@@ -38,7 +38,7 @@
 ![yogimukja_erd](https://github.com/user-attachments/assets/0794f9b5-4cc9-4425-ab8f-08f75cf5890c)
 
 # 주요 기능🛠️
-## 1) 대용량 INSERT/UPDATE 작업을 위한 Spring Batch 구현
+## 1) 대용량 INSERT/UPDATE 작업을 위한 `Spring Batch` 구현
 `Spring Batch`, `Webflux`, `Scheduler`를 활용하고, 매일 오전 3시에 스케줄러를 실행하여 최신 데이터를 보장합니다.
 
 ### ⭐️ `511,273건`의 데이터 Batch 작업에 `4.72분` 소요
@@ -101,8 +101,8 @@
 * 점심 식사로 부적합한 업종은 필터링
   * ex) '술집', '카페/디저트' 등
 
-# 트러블 슈팅
-## 1) Batch 작업 중 발생한 **동시성 문제 해결**
+# 💡 트러블 슈팅
+## 1) Batch 작업 중 발생한 `동시성 문제 해결`
    * 배경/원인
      * API 데이터를 받아오는 작업을 병렬 처리하기 위해 TaskExecutor를 사용하도록 구현
      * 이때, **동일 범위에 대한 요청이 여러 번 발생**하는 문제 발생
@@ -111,7 +111,7 @@
      * 초기 요청으로 전체 API 데이터 범위를 알아낸 후, 이를 통해 `Range`를 생성하여 `ConcurrentLinkedQueue`에 저장
      * 각 스레드는 작업 시작 시 Queue에서 Range를 하나씩 가져와(`poll()`) 해당 범위에 대한 API 요청을 수행하도록 수정하여 해결
 
-## 2) Batch 처리 속도 향상을 위한 **JDBC Template** 도입
+## 2) Batch 처리 속도 향상을 위한 `JDBC Template` 도입
 
     * 배경
         * 초기에는 `JPA`의 `saveAll()` 메서드를 사용하여 Bulk Insert/Update하는 방식 고려
