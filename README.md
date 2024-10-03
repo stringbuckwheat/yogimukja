@@ -113,11 +113,11 @@
 
 ## 2) Batch 처리 속도 향상을 위한 `JDBC Template` 도입
 
-    * 배경
-        * 초기에는 `JPA`의 `saveAll()` 메서드를 사용하여 Bulk Insert/Update하는 방식 고려
-        * 그러나 실행해보니 <u>속도가 느리고</u>, 콘솔에서 **Bulk Insert/Update가 이루어지지 않음**을 확인
-    * 원인
-        * JPA의 @Id에 auto_increment 속성 사용 시, Bulk Insert/Update가 제대로 작동하지 않는다는 사실 인지
-    * 해결: `JDBC Template` 도입
-        * JDBC Template으로 여러 SQL 쿼리를 한 번에 묶어서 실행하는 것을 보장하기로 결정
-        * 데이터베이스와의 통신 횟수를 줄이고 성능 향상
+  * 배경
+    * 초기에는 `JPA`의 `saveAll()` 메서드를 사용하여 Bulk Insert/Update하는 방식 고려
+    * 그러나 실행해보니 <u>속도가 느리고</u>, 콘솔에서 **Bulk Insert/Update가 이루어지지 않음**을 확인
+  * 원인
+    * JPA의 @Id에 auto_increment 속성 사용 시, Bulk Insert/Update가 제대로 작동하지 않는다는 사실 인지
+  * 해결: `JDBC Template` 도입
+    * JDBC Template으로 여러 SQL 쿼리를 한 번에 묶어서 실행하는 것을 보장하기로 결정
+    * 데이터베이스와의 통신 횟수를 줄이고 성능 향상
