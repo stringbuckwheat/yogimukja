@@ -80,7 +80,7 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .join(restaurant.reviews, review)
                 .where(review.createdDate.after(startDate))
                 .groupBy(restaurant.id)
-                .orderBy(review.rate.avg().desc())
+                .orderBy(review.rate.avg().coalesce(0.0).desc())
                 .fetch();
     }
 
@@ -106,7 +106,7 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(
-                        review.rate.avg().coalesce(0.0).desc()  // null 값을 0으로 대체
+                        review.rate.avg().coalesce(0.0).desc()
                 )
                 .fetch();
     }
@@ -158,7 +158,7 @@ public class RestaurantQueryRepositoryImpl implements RestaurantQueryRepository 
             ).asc();
         } else {
             // 평점 순
-            return review.rate.avg().asc();
+            return review.rate.avg().coalesce(0.0).desc();
         }
     }
 
