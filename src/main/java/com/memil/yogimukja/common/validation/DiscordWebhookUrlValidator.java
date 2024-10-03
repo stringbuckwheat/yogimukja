@@ -10,14 +10,10 @@ public class DiscordWebhookUrlValidator implements ConstraintValidator<ValidDisc
 
     @Override
     public boolean isValid(String url, ConstraintValidatorContext context) {
-
         if (url == null || url.isEmpty()) {
-            System.out.println("url is null");
             return false;
         }
 
-        System.out.println(url);
-        System.out.println(url.startsWith(DISCORD_WEBHOOK_URL_PREFIX));
         return url.startsWith(DISCORD_WEBHOOK_URL_PREFIX);
     }
 }

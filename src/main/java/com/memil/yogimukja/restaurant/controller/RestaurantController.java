@@ -33,11 +33,11 @@ public class RestaurantController {
     }
 
     /**
-     * 최근 일주일 간 리뷰가 올라온 식당 리스트 (10개)
+     * 최근 일주일 간 리뷰가 좋은 식당 리스트 (10개)
      *
      * @param latitude 사용자 현재 위도
      * @param longitude 사용자 현재 경도
-     * @return 최근 일주일 간 리뷰가 올라온 식당 상세 정보 리스트
+     * @return 최근 일주일 간 리뷰가 좋은 식당 상세 정보 리스트
      */
     @GetMapping("/api/restaurant/popular")
     public ResponseEntity<List<RestaurantResponse>> getPopular(@RequestParam(name = "latitude") double latitude,

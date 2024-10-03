@@ -8,6 +8,7 @@ import com.memil.yogimukja.common.util.CookieUtil;
 import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
+import com.memil.yogimukja.user.dto.UserUpdate;
 import com.memil.yogimukja.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -85,14 +86,14 @@ public class UserController {
     /**
      * 사용자 정보 수정
      *
-     * @param userRequest 업데이트할 사용자 정보를 포함한 요청 객체
+     * @param userUpdate 업데이트할 사용자 정보를 포함한 요청 객체
      * @param userCustom 인증된 사용자 객체
      * @return 업데이트된 사용자 정보를 포함한 응답 객체
      * @throws UsernameNotFoundException 주어진 ID의 사용자를 찾을 수 없는 경우
      */
     @PutMapping("/api/user")
-    public ResponseEntity<UserResponse> update(@RequestBody UserRequest userRequest, @AuthenticationPrincipal UserCustom userCustom) {
-        UserResponse response = userService.update(userRequest, userCustom.getId());
+    public ResponseEntity<UserResponse> update(@RequestBody @Valid UserUpdate userUpdate, @AuthenticationPrincipal UserCustom userCustom) {
+        UserResponse response = userService.update(userUpdate, userCustom.getId());
         return ResponseEntity.ok().body(response);
     }
 

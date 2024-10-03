@@ -11,6 +11,5 @@ public interface RegionService {
      *
      * @return {@link CachedRegion} 객체의 리스트
      */
-
     List<CachedRegion> getAll();
 }

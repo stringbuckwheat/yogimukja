@@ -10,7 +10,6 @@ public enum RestaurantSort {
 
     public static RestaurantSort from(String value) {
         try {
-            System.out.println(value);
             return RestaurantSort.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(ErrorMessage.ILLEGAL_RESTAURANT_SORT_OPTION.getMessage());

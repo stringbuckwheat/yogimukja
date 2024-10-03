@@ -7,6 +7,7 @@ import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
 import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
+import com.memil.yogimukja.user.dto.UserUpdate;
 import com.memil.yogimukja.user.entity.User;
 import com.memil.yogimukja.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -82,11 +83,11 @@ public class UserServiceImpl implements UserService {
     // 회원 정보 수정
     @Transactional
     @Override
-    public UserResponse update(UserRequest userRequest, Long userId) {
+    public UserResponse update(UserUpdate userUpdate, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException(ErrorMessage.USER_NOT_FOUND.getMessage()));
 
-        user.update(userRequest.getName());
+        user.update(userUpdate.getName());
 
         return new UserResponse(user);
     }

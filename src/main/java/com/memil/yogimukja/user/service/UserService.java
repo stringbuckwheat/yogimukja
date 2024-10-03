@@ -5,6 +5,7 @@ import com.memil.yogimukja.common.error.exception.HasSameUsernameException;
 import com.memil.yogimukja.user.dto.LunchRequest;
 import com.memil.yogimukja.user.dto.UserRequest;
 import com.memil.yogimukja.user.dto.UserResponse;
+import com.memil.yogimukja.user.dto.UserUpdate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 
@@ -48,12 +49,12 @@ public interface UserService {
     /**
      * 사용자의 정보 수정
      *
-     * @param userRequest 업데이트할 사용자 정보를 포함한 요청 객체
+     * @param userUpdate 업데이트할 사용자 정보를 포함한 요청 객체
      * @param userId 업데이트할 사용자의 ID
      * @return 업데이트된 사용자 정보를 포함한 응답 객체
      * @throws UsernameNotFoundException 주어진 ID의 사용자를 찾을 수 없는 경우
      */
-    UserResponse update(UserRequest userRequest, Long userId);
+    UserResponse update(UserUpdate userUpdate, Long userId);
 
     /**
      * 회원 탈퇴 (리프레쉬 토큰 무효화)

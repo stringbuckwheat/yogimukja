@@ -9,7 +9,6 @@ public class LunchRequest {
     @NotBlank
     @ValidDiscordWebhook
     private String webHookUrl;
-
     private Double latitude; // 위도
     private Double longitude; // 경도
 }
