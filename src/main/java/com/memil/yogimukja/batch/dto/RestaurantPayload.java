@@ -21,4 +21,5 @@ public class RestaurantPayload {
     private RestaurantType type; // 업태 구분명
     private LocalDateTime apiUpdatedAt; // API 수정일
     private Long regionId;
+    private String state;
 }

@@ -2,12 +2,15 @@ package com.memil.yogimukja.batch.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
 public class RestaurantOverview {
     private String managementId;
+
+    @Setter
     private LocalDateTime apiUpdatedAt;
 
     @QueryProjection

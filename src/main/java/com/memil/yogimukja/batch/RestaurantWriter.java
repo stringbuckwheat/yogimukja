@@ -33,9 +33,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
 
     @Override
     public void write(Chunk<? extends List<RestaurantPayload>> chunk) {
-        List<RestaurantPayload> restaurants = chunk.getItems().stream()
-                .flatMap(List::stream)
-                .toList();
+        List<RestaurantPayload> restaurants = chunk.getItems().stream().flatMap(List::stream).toList();
 
         // 신규 추가 및 업데이트할 레스토랑 리스트
         List<RestaurantPayload> toInsert = new ArrayList<>();
@@ -50,6 +48,8 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
 
                 // 새 엔티티가 더 최신 정보를 반영하고 있을 때
                 if (existing.getApiUpdatedAt().isBefore(restaurant.getApiUpdatedAt())) {
+                    existing.setApiUpdatedAt(restaurant.getApiUpdatedAt());
+                    existingRestaurantMap.put(managementId, existing);
                     toUpdate.add(restaurant); // 업데이트 목록에 추가
                 }
 
@@ -70,9 +70,9 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
     private void bulkInsert(List<RestaurantPayload> restaurants) {
         String sql = """
                 INSERT INTO restaurant (
-                    management_id, name, address, location, closed_date, phone_number, type, api_updated_at, region_id 
+                    management_id, name, address, location, closed_date, phone_number, type, api_updated_at, region_id, state 
                 ) VALUES (
-                    ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?
+                    ?, ?, ?, ST_GeomFromText(?, 4326), ?, ?, ?, ?, ?, ?
                 )
                 """;
 
@@ -86,7 +86,8 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getPhoneNumber(),
                         restaurant.getType().getTitle(),
                         restaurant.getApiUpdatedAt(),
-                        restaurant.getRegionId()
+                        restaurant.getRegionId(),
+                        restaurant.getState()
                 })
                 .collect(Collectors.toList());
 
@@ -98,7 +99,7 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                 UPDATE 
                     restaurant 
                 SET name = ?, address = ?, location = ST_GeomFromText(?, 4326), closed_date = ?, 
-                    phone_number = ?, type = ?, api_updated_at = ?, region_id = ?
+                    phone_number = ?, type = ?, api_updated_at = ?, region_id = ?, state = ?
                 WHERE management_id = ?
                 """;
 
@@ -112,7 +113,8 @@ public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
                         restaurant.getType().getTitle(),
                         restaurant.getApiUpdatedAt(),
                         restaurant.getRegionId(),
-                        restaurant.getManagementId()
+                        restaurant.getManagementId(),
+                        restaurant.getState()
                 })
                 .collect(Collectors.toList());
 

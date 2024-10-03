@@ -16,9 +16,6 @@ public class RestaurantReclassificationTasklet implements Tasklet {
     private final JdbcTemplate jdbcTemplate;
 
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        log.info("Bulk INSERT/UPDATE end");
-        log.info("Restaurant reclassification start!!!");
-
         String sql = """
                 UPDATE restaurant
                 SET type = CASE

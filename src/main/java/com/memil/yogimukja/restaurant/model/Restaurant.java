@@ -43,6 +43,8 @@ public class Restaurant {
     @ManyToOne(fetch = FetchType.LAZY)
     private Region region;
 
+    private String state;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant")
     private List<Review> reviews = new ArrayList<>();
 }

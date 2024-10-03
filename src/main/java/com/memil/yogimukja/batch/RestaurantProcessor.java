@@ -45,13 +45,14 @@ public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>,
 
     private boolean isValid(ApiResponse.Row row) {
         LocalDate closedDate = parseClosedDate(row.getDcbYmd());
-        boolean isClosedDateRecent = closedDate == null || closedDate.isAfter(LocalDate.now().minusYears(5));
+        boolean isClosedRecently = closedDate != null && row.getDtlStateNm().equals("폐업") && closedDate.isAfter(LocalDate.now().minusYears(5));
+        boolean isClosedDateValid = closedDate == null || isClosedRecently;
 
         return row != null
                 && row.getRdnWhlAddr() != null && !row.getRdnWhlAddr().isEmpty()
                 && row.getY() != null && !row.getY().isEmpty()
                 && row.getX() != null && !row.getX().isEmpty()
-                && isClosedDateRecent // 폐업한 가게는 5년 전 정보까지만 허용
+                && isClosedDateValid // 폐업한 가게는 5년 전 정보까지만 허용
                 && !EXCLUDED_TYPES.contains(row.getUptAenM()); // 타입 필터링 추가
     }
 
@@ -70,6 +71,7 @@ public class RestaurantProcessor implements ItemProcessor<List<ApiResponse.Row>,
                 .type(RestaurantType.getType(item.getUptAenM().trim()))
                 .apiUpdatedAt(LocalDateTime.parse(item.getUpdateDt(), formatter))
                 .closedDate(parseClosedDate(item.getDcbYmd()))
+                .state(item.getDtlStateNm())
                 .build();
     }
 

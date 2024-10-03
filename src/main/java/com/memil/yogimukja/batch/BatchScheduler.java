@@ -18,15 +18,19 @@ public class BatchScheduler {
 
     @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시에 실행
     public void runBatchJob() {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+
         try {
             JobParametersBuilder params = new JobParametersBuilder();
             params.addString("runId", String.valueOf(System.currentTimeMillis()));
             jobLauncher.run(restaurantDataJob, params.toJobParameters());
-
-            log.info("배치 작업 시작!");
         } catch (Exception e) {
             e.printStackTrace();
             log.warn("배치 작업 실행 중 오류 발생: " + e.getMessage());
+        } finally {
+            long endTime = System.currentTimeMillis(); // 종료 시간 기록
+            long duration = endTime - startTime; // 소요 시간 계산
+            log.info("배치 작업 소요 시간: " + duration + " ms");
         }
     }
 }
