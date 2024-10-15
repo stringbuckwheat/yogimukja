@@ -1,6 +1,7 @@
 package com.memil.yogimukja.recommend.scheduler;
 
 import com.memil.yogimukja.recommend.dto.RecommendMessage;
+import com.memil.yogimukja.recommend.dto.Recommendation;
 import com.memil.yogimukja.restaurant.dto.RestaurantQueryParams;
 import com.memil.yogimukja.restaurant.dto.RestaurantResponse;
 import com.memil.yogimukja.restaurant.enums.RestaurantSort;
@@ -14,12 +15,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Service
@@ -42,40 +44,28 @@ public class LunchRecommendationScheduler {
     }
 
     // 스케줄링: 11시 30분
-    @Scheduled(cron = "0 52 19 * * ?")
+    @Scheduled(cron = "0 30 11 * * ?")
     public void sendLunchRecommendations() {
-        // 점심 추천을 사용하는 유저들
-        List<User> allUsers = userRepository.findByWebHookUrlIsNotNullAndLocationIsNotNull();
+        List<User> users = userRepository.findByWebHookUrlIsNotNullAndLocationIsNotNull();
 
-        List<CompletableFuture<Void>> futures = allUsers.stream()
-                .map(this::sendRecommendationForUser)
+        // 응답 생성
+        List<Recommendation> recommendations = createRecommendationsForAllUsers(users);
+
+        // 비동기 전송
+        sendRecommendations(recommendations).subscribe(
+                nullValue -> log.info("모든 메시지 전송 완료"),
+                error -> log.error("메시지 전송 중 오류 발생", error)
+        );
+    }
+
+    private List<Recommendation> createRecommendationsForAllUsers(List<User> users) {
+        return users.stream()
+                .map(user -> {
+                    List<RestaurantResponse> restaurants = getRecommendableBy(user.getLocation());
+                    String message = createMessage(user.getName(), restaurants);
+                    return new Recommendation(user.getWebHookUrl(), message);
+                })
                 .toList();
-
-        // 모든 비동기 작업이 끝나기를 기다림
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-    }
-
-    private CompletableFuture<Void> sendRecommendationForUser(User user) {
-        return CompletableFuture.runAsync(() -> {
-            List<RestaurantResponse> restaurants = getRecommendableBy(user.getLocation());
-            String message = createMessage(user.getName(), restaurants);
-            sendMessage(user.getWebHookUrl(), message).subscribe(
-                    response -> log.info("메시지 전송 성공"),
-                    error -> log.error("메시지 전송 실패", error));
-        });
-    }
-
-    private List<RestaurantResponse> getRecommendableBy(Point location) {
-        RestaurantQueryParams queryParams = RestaurantQueryParams.builder()
-                .latitude(location.getY())
-                .longitude(location.getX())
-                .range(500.0)
-                .sort(RestaurantSort.RATING)
-                .pageable(PageRequest.of(0, 5))
-                .type(VALID_RESTAURANT_TYPE)
-                .build();
-
-        return restaurantQueryRepository.findBy(queryParams);
     }
 
     private String createMessage(String name, List<RestaurantResponse> nearbyRestaurants) {
@@ -98,17 +88,34 @@ public class LunchRecommendationScheduler {
         return messageBuilder.toString();
     }
 
+    private List<RestaurantResponse> getRecommendableBy(Point location) {
+        RestaurantQueryParams queryParams = RestaurantQueryParams.builder()
+                .latitude(location.getY())
+                .longitude(location.getX())
+                .range(500.0)
+                .sort(RestaurantSort.RATING)
+                .pageable(PageRequest.of(0, 5))
+                .type(VALID_RESTAURANT_TYPE)
+                .build();
+
+        return restaurantQueryRepository.findBy(queryParams);
+    }
+
+    private Mono<Void> sendRecommendations(List<Recommendation> recommendations) {
+        return Flux.fromIterable(recommendations)
+                .flatMap(rec -> sendMessage(rec.getWebHookUrl(), rec.getMessage())
+                        .subscribeOn(Schedulers.boundedElastic()) // 병렬 처리
+                        .doOnError(error -> log.error("메시지 전송 실패", error))
+                )
+                .then();
+    }
+
     // 메시지 전송
     private Mono<String> sendMessage(String webHookUrl, String content) {
         return webClient.post()
                 .uri(webHookUrl)
                 .bodyValue(new RecommendMessage(content))
                 .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        response -> {
-                            log.error("Failed to send message: {}", response.statusCode());
-                            return Mono.error(new RuntimeException("Error sending message"));
-                        })
                 .bodyToMono(String.class);
     }
 }
