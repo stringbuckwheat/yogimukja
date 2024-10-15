@@ -4,15 +4,16 @@
    * 기술 스택
    * ERD
 2. 주요 기능
-   * 대용량 INSERT/UPDATE 작업을 위한 Spring Batch 구현
+   * 대용량 INSERT/UPDATE 작업을 위한 **Spring Batch** 구현
      * 511,273건의 데이터 Batch 작업에 4.72분 소요
      * Batch 처리 과정
-   * Redis 캐싱을 사용한 빠른 응답
-   * Scheduler를 활용한 점심 추천 식당 리스트 비동기 알림 전송
+   * Redis **캐싱**을 사용한 빠른 응답
+   * **Scheduler**를 활용한 점심 추천 식당 리스트 비동기 알림 전송
 3. 트러블 슈팅
    * Batch 작업 중 발생한 동시성 문제 해결
    * Batch 처리 속도 향상을 위한 JDBC Template 도입
 
+<br/>
 
 # 요기먹자🍜🍣🥗
 요기먹자는 **위치 기반 맛집 추천 및 리뷰 서비스**의 백엔드 API입니다.
@@ -23,6 +24,7 @@
 * 식당 리뷰: 사용자는 식당 리뷰를 작성하고 별점을 매길 수 있습니다.
 * 점심 추천 기능: 매일 11시 30분에 사용자 위치 근방의 식당을 추천합니다.
 
+<br/>
 
 ## 기술 스택
 * `Spring Boot(3.3)`
@@ -34,18 +36,26 @@
 * `JPA/Hibernate`, `QueryDsl`
 * `Postgres(16.4)`, `Redis`
 
+<br/>
+
 ## ERD
 ![yogimukja_erd](https://github.com/user-attachments/assets/0794f9b5-4cc9-4425-ab8f-08f75cf5890c)
+
+<br/>
 
 # 주요 기능🛠️
 ## 1) 대용량 INSERT/UPDATE 작업을 위한 `Spring Batch` 구현
 `Spring Batch`, `Webflux`, `Scheduler`를 활용하고, 매일 오전 3시에 스케줄러를 실행하여 최신 데이터를 보장합니다.
+
+<br/>
 
 ### ⭐️ `511,273건`의 데이터 Batch 작업에 `4.72분` 소요
 ![스크린샷 2024-10-03 15 50 59](https://github.com/user-attachments/assets/f2bb9837-8175-4541-924a-b8d93fbb5cb0)
 ![스크린샷 2024-10-03 15 55 20](https://github.com/user-attachments/assets/2c5a48ed-34b6-4055-8ef5-4c716d729038)
 
 (신규 INSERT 시(빈 테이블)의 소요 시간입니다.)
+
+<br/>
 
 ### ⚙️ Batch 처리 과정
    - `Reader`
@@ -74,6 +84,8 @@
      - 특정 단어, 브랜드명을 포함한 식당명을 기반으로 식당 카테고리 재분류
      - ex) '투썸 플레이스', '빙수' 등을 포함하는 식당명은 '카페/디저트' 카테고리로 UPDATE
 
+<br/>
+
 ## 2) Redis 캐싱을 사용한 빠른 응답
 사용자가 자주 접근하는 정보와 변하지 않는 정보를 Redis에 캐싱하여 조회 시 응답 속도 개선 
 캐시 별 유효기간 세분화로 최적화 
@@ -88,18 +100,19 @@
 * 서울 행정구역 정보 캐싱 
   * 변경 가능성이 낮기 때문에 캐시 유효기간을 두지 않아 성능 최적화 
 
+<br/>
+
 ## 3) Scheduler를 활용한 점심 추천 식당 리스트 비동기 알림 전송
 매일 `11시 30분`에 사용자 위치에 따른 **점심 식당 추천 리스트** 전송     
 
 ![lunch_recommend](https://github.com/user-attachments/assets/50a88573-8758-4374-82f3-90b8e50aa308)
 
+* `Flux`, `Mono`를 사용하여 각 사용자의 점심 추천 메시지를 **비동기/병렬 전송**
+  * 사용자별 점심 추천 내역 추출 후,
+    * 지정된 위치에서 500m 이내, 술집/디저트 제외 후 별점 순 정렬, 5개
+  * 비동기/병렬 처리한 후 Discord 전송
 
-* `CompletableFuture`로 각 사용자의 점심 추천 메시지를 **비동기적으로 전송**하도록 구현 
-* 사용자 맞춤 추천
-  * 사용자의 **위치 정보**를 바탕으로 **해당 반경 내의 식당** 리스트 추출
-  * Discord `WebHook URL`을 사용하여 추천 정보 전달
-* 점심 식사로 부적합한 업종은 필터링
-  * ex) '술집', '카페/디저트' 등
+<br/>
 
 # 💡 트러블 슈팅
 ## 1) Batch 작업 중 발생한 `동시성 문제 해결`
@@ -110,6 +123,8 @@
    * 해결: `ConcurrentLinkedQueue` 도입
      * 초기 요청으로 전체 API 데이터 범위를 알아낸 후, 이를 통해 `Range`를 생성하여 `ConcurrentLinkedQueue`에 저장
      * 각 스레드는 작업 시작 시 Queue에서 Range를 하나씩 가져와(`poll()`) 해당 범위에 대한 API 요청을 수행하도록 수정하여 해결
+
+<br/>
 
 ## 2) Batch 처리 속도 향상을 위한 `JDBC Template` 도입
 
