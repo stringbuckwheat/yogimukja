@@ -3,9 +3,10 @@ package com.memil.yogimukja.batch;
 import com.memil.yogimukja.batch.dto.RestaurantOverview;
 import com.memil.yogimukja.batch.dto.RestaurantPayload;
 import com.memil.yogimukja.restaurant.repository.RestaurantQueryRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.context.annotation.Lazy;
@@ -19,16 +20,17 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 @Lazy
-public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>> {
+public class RestaurantWriter implements ItemWriter<List<RestaurantPayload>>, StepExecutionListener {
 
     private final RestaurantQueryRepository restaurantQueryRepository;
     private final JdbcTemplate jdbcTemplate;
     private Map<String, RestaurantOverview> existingRestaurantMap;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void beforeStep(StepExecution stepExecution) {
         existingRestaurantMap = restaurantQueryRepository.findAllManagementIdAndApiUpdatedAt().stream()
                 .collect(Collectors.toMap(RestaurantOverview::getManagementId, r -> r));
+        log.info("existingRestaurantMap 초기화 완료: {} 개의 항목", existingRestaurantMap.size());
     }
 
     @Override

@@ -2,8 +2,9 @@ package com.memil.yogimukja.batch;
 
 import com.memil.yogimukja.batch.dto.ApiResponse;
 import com.memil.yogimukja.batch.dto.Range;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Slf4j
 @Component
 @DependsOn("restaurantDataFetcher")
-public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
+public class RestaurantReader implements ItemReader<List<ApiResponse.Row>>, StepExecutionListener {
 
     private final RestaurantDataFetcher dataFetcher;
     private final ConcurrentLinkedQueue<Range> rangeQueue = new ConcurrentLinkedQueue<>();
@@ -27,10 +28,10 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
         this.dataFetcher = dataFetcher;
     }
 
-    @PostConstruct
-    public void init() {
-        // 배치 작업 시작 전에 초기화
-        initializeEndValue().block();  // 초기화가 끝날 때까지 대기
+    @Override
+    public void beforeStep(StepExecution stepExecution) {
+        // 배치 실행 시작 시 한 번만 end 값을 초기화
+        initializeEndValue().block();
     }
 
     private Mono<Void> initializeEndValue() {
@@ -45,6 +46,8 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
     }
 
     private void initializeRanges() {
+        rangeQueue.clear();  // 기존 큐 초기화
+
         for (int start = 1; start <= end; start += step) {
             int rangeEnd = Math.min(start + step - 1, end);
             rangeQueue.add(new Range(start, rangeEnd));
@@ -53,11 +56,6 @@ public class RestaurantReader implements ItemReader<List<ApiResponse.Row>> {
 
     @Override
     public List<ApiResponse.Row> read() {
-        // end 값이 초기화되지 않았다면 초기화 로직 수행
-        if (end == 0) {
-            initializeEndValue().block();  // 초기화가 끝날 때까지 대기
-        }
-
         Range range = rangeQueue.poll();
 
         if (range == null) {
