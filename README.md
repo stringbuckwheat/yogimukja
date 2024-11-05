@@ -10,8 +10,8 @@
    * Redis **캐싱**을 사용한 빠른 응답
    * **Scheduler**를 활용한 점심 추천 식당 리스트 비동기 알림 전송
 3. 트러블 슈팅
+   * Batch 속도 향상 리팩토링
    * Batch 작업 중 발생한 동시성 문제 해결
-   * Batch 처리 속도 향상을 위한 JDBC Template 도입
 
 <br/>
 
@@ -72,8 +72,8 @@
 
    - `Writer`
      - 가공한 데이터로 Bulk INSERT/UPDATE 수행
-     - 간략한 기존 레스토랑 데이터(관리 ID와 API 업데이트 시점)를 `existingRestaurantMap`에 저장
-       - 이를 통해 신규 추가/업데이트할 레스토랑 구분
+     - 간략한 기존 음식점 데이터(관리 ID와 API 업데이트 시점)를 `existingRestaurantMap`에 저장
+       - 이를 통해 신규 추가/업데이트할 음식점 구분
      - 한 번의 Chunk에서 받은 식당 데이터를 순회하며
        - `existingRestaurantMap`에 해당 관리ID가 없으면 신규 식당으로 간주, 삽입 목록에 추가
        - map에 정보가 존재하지만 기존 식당 데이터의 수정시각보다 api 수정 시각이 최근일 경우, 업데이트 목록에 추가
