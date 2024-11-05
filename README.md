@@ -115,7 +115,24 @@
 <br/>
 
 # 💡 트러블 슈팅
-## 1) Batch 작업 중 발생한 `동시성 문제 해결`
+## 1) Batch 속도 향상 리팩토링
+![batch_refactoring](https://github.com/user-attachments/assets/a5501800-bf8d-457c-b956-afad13000abe)
+   * 배경
+     * 기존 Batch 프로세스가 17여분 소요되는 문제 발생
+   * 원인
+     * OpenAPI 데이터를 받아오는 작업에서 **단일 스레드, 동기식** 수신
+     * OpenAPI와 기존 테이블 데이터를 비교해서 **수정/삽입 대상 판별** 로직에서 빈번한 SELECT 발생
+     * `JPA`의 `saveAll()`을 사용하였으나 Bulk Insert/Update 쿼리가 아닌, 개별 Insert/Update 발생
+       * @Id에 auto_increment 속성 사용 시, Bulk Insert/Update가 작동하지 않는다는 사실 인지
+   * 해결
+     * Batch 스레드 `병렬 처리` 및 OpenAPI 데이터를 `비동기` 방식으로 가져오도록 수정
+     * `수정/삽입 대상 판별 로직` 최적화
+       * 배치 프로세스 시작 시점에 '관리ID(지자체 발급), OpenAPI 수정일' **Map에 저장**
+       * Map에 존재하지 않으면 Insert, 존재한다면 OpenAPI 수정일을 비교하여 Update
+     * `JDBC Template`를 도입하여 여러 SQL 쿼리를 한 번에 묶어서 실행하는 것을 보장
+
+
+## 2) Batch 작업 중 발생한 `동시성 문제 해결`
    * 배경/원인
      * API 데이터를 받아오는 작업을 병렬 처리하기 위해 TaskExecutor를 사용하도록 구현
      * 이때, **동일 범위에 대한 요청이 여러 번 발생**하는 문제 발생
@@ -123,16 +140,3 @@
    * 해결: `ConcurrentLinkedQueue` 도입
      * 초기 요청으로 전체 API 데이터 범위를 알아낸 후, 이를 통해 `Range`를 생성하여 `ConcurrentLinkedQueue`에 저장
      * 각 스레드는 작업 시작 시 Queue에서 Range를 하나씩 가져와(`poll()`) 해당 범위에 대한 API 요청을 수행하도록 수정하여 해결
-
-<br/>
-
-## 2) Batch 처리 속도 향상을 위한 `JDBC Template` 도입
-
-  * 배경
-    * 초기에는 `JPA`의 `saveAll()` 메서드를 사용하여 Bulk Insert/Update하는 방식 고려
-    * 그러나 실행해보니 <u>속도가 느리고</u>, 콘솔에서 **Bulk Insert/Update가 이루어지지 않음**을 확인
-  * 원인
-    * JPA의 @Id에 auto_increment 속성 사용 시, Bulk Insert/Update가 제대로 작동하지 않는다는 사실 인지
-  * 해결: `JDBC Template` 도입
-    * JDBC Template으로 여러 SQL 쿼리를 한 번에 묶어서 실행하는 것을 보장하기로 결정
-    * 데이터베이스와의 통신 횟수를 줄이고 성능 향상
